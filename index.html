@@ -1,0 +1,301 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <title>One Time Secret</title>
+  <meta content="text/html;charset=utf-8" http-equiv="Content-Type">
+  <meta content="utf-8" http-equiv="encoding">
+<style>
+html {
+  box-sizing: border-box;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 15px;
+}
+*, *:before, *:after {
+  box-sizing: inherit;
+}
+textarea,
+input[type="submit"],
+  input[type="password"] {
+  width: 100%;
+}
+input,
+select,
+textarea {
+  border-radius: 10px;
+  font-size: 15px;
+}
+form {
+  display: block;
+  margin: 0 auto;
+}
+fieldset {
+  border-radius: 10px;
+}
+fieldset > * {
+  display: block;
+  margin-bottom: 1rem;
+}
+input[type="submit"],
+label {
+  cursor: pointer;
+}
+#show-secret,
+#share-secret,
+#show-secret-expired {
+  display: none;
+}
+#share-secret,
+#show-secret-expired {
+  margin-top: 1rem;
+  padding: 1rem;
+  text-align: center;
+  background-color: #efefef;
+}
+#show-secret-expired {
+  margin: 0 0 1rem;
+}
+#share-secret-link,
+#share-secret-copy {
+  display: inline-block
+}
+#share-secret-copy {
+  cursor: pointer;
+}
+#revealed-secret {
+  padding: 1rem;
+  margin-bottom: 1rem;
+  background-color: #efefef;
+}
+#revealed-secret:empty {
+  display: none;
+}
+#sp {
+  display: none;
+  margin: 1rem auto;
+  width: 100%;
+}
+#sp input[type="password"] {
+  width: 100%;
+}
+#sp input[type="submit"] {
+  display: none;
+}
+@media (min-width: 768px) {
+  body {
+    padding: 2rem;
+  }
+  form {
+    display: block;
+    margin: 0 auto;
+    max-width: 50%;
+  }
+  #ots input[type="password"] {
+    width: 75%;
+  }
+}
+@media (prefers-color-scheme: dark) {
+  body,
+  input,
+  select,
+  textarea {
+    background-color: #333;
+    color: #efefef;
+  }
+  input[type="submit"] {
+    background-color: #666;
+  }
+
+  #share-secret,
+  #revealed-secret {
+    background-color: #444;
+  }
+  a {
+    color: #bfbfff;
+  }
+}
+</style>
+</head>
+<body>
+
+<div id="show-secret">
+  The secret: 
+  <form id="sp">
+    <input type="password" name="password" placeholder="Enter secret password and press return" />
+    <input type="submit" />
+  </form>
+  <div id="revealed-secret"></div>
+</div>
+
+<div id="show-secret-expired"></div>
+
+<form id="ots">
+  <fieldset>
+    <legend>Create new secret 🤫</legend>
+    <textarea name="secret" rows="5" required="required"></textarea>
+    <label>Expires in:
+      <input name="minutes" type="number" min="1" step="1" value="10" />
+      minutes ⏱
+    </label>
+    <label>Delete password immediately after being shown <input name="expireAfterFetched" type="checkbox" checked="checked" /> 📜👀💥</label>
+    <label>Password:
+      <input name="password" type="password" placeholder="This is optional, but not a bad idea at all." /> 🔑
+    </label>
+    <input type="submit" value="Submit" />
+  </fieldset>
+</form>
+
+<div id="share-secret">
+  <span id="share-secret-link"></span>
+  <span id="share-secret-copy" data-copied-text="Copied 📝">Copy link 📋</span>
+</div>
+
+<script>
+(function() {
+  const ots = document.getElementById('ots');
+  ots.addEventListener('submit', onSubmit);
+
+  const showSecret = document.getElementById('show-secret');
+  const revealedSecret = document.getElementById('revealed-secret');
+  const secretPassword = document.getElementById('sp');
+  const showSecretExpired = document.getElementById('show-secret-expired');
+  secretPassword.addEventListener('submit', onPasswordSubmit);
+  
+  const shareSecret = document.getElementById('share-secret');
+  const secretLink = document.getElementById('share-secret-link');
+  const copyLink = document.getElementById('share-secret-copy');
+  copyLink.addEventListener('click', onCopyLink);
+  const COPY_LINK = copyLink.innerText;
+  const COPY_LINK_COPIED = copyLink.getAttribute('data-copied-text');
+
+  const AUTH_REQUIRED = 'authorization required';
+
+  const secretId = getSecretId();
+  if (secretId) {
+    getSecret(secretId);
+  }
+
+  function onSubmit(e) {
+    e.preventDefault();
+    const secret = ots.secret.value;
+    const minutes = ots.minutes.value;
+    const expireAfterFetched = ots.expireAfterFetched.checked;
+    const password = ots.password.value;
+    const seconds = minutes * 60;
+    createSecret(secret, seconds, expireAfterFetched, password);
+  }
+
+  function onPasswordSubmit(e) {
+    e.preventDefault();
+    getSecret(secretId, secretPassword.password.value);
+  }
+
+  function createSecret(value, seconds, expireAfterFetched, password) {
+    const req = new Request('/api', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        value: value,
+        seconds: seconds,
+        expireAfterFetched: expireAfterFetched,
+        password: password
+      })
+    });
+    fetch(req).then(response => {
+      return response.json()
+    }).then(json => {
+      console.log(json);
+      const url = document.location.protocol + '//' + document.location.host + '?s=' + json.id;
+      secretLink.innerHTML = '<a href="?s=' + json.id + '">' + url + '</a>';
+      shareSecret.style.display = 'block';
+      ots.secret.value = '';
+    });
+  }
+
+  function onCopyLink(e) {
+    e.preventDefault();
+    copyToClipboard(secretLink.innerText, () => {
+      copyLink.innerText = COPY_LINK_COPIED;
+      setTimeout(() => {
+        copyLink.innerText = COPY_LINK;
+      }, 1000);
+    }, err => {
+      console.warn('copyToClipboard failed', err);
+    });
+  }
+
+  function getSecret(id, password) {
+    const req = new Request('/api/' + id, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        password: password
+      })
+    });
+    fetch(req).then(response => {
+      if (response.status === 401) {
+        showSecret.style.display = 'block';
+        secretPassword.style.display = 'inline-block';
+      }
+      return response.json()
+    }).then(json => {
+      if (json.value) {
+        revealedSecret.innerText = json.value;
+        showSecret.style.display = 'block';
+      } else if (json.err !== AUTH_REQUIRED) {
+        showSecretExpired.innerText = 'Secret not found';
+        showSecretExpired.style.display = 'block';
+        history.pushState({}, null, '/');
+        setTimeout(() => {
+          showSecretExpired.style.display = 'none';
+        }, 3000);
+      }
+      // history.replaceState({}, document.title, '/');
+    }).catch(err => {
+      console.log(err);
+    });
+  }
+
+  function getSecretId() {
+    let secretId;
+    const qs = document.location.search.substr(1);
+    const qsPairs = qs.split('&');
+    qsPairs.forEach(pair => {
+      const kv = pair.split('=');
+      if (kv[0] === 's') {
+        secretId = kv[1];
+      }
+    });
+    return secretId;
+  }
+
+  function copyToClipboard(value, success = () => null, failure = () => null) {
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(value).then(success, failure);
+    } else {
+      if (document.execCommand) {
+        const el = document.createElement('input');
+        el.value = value;
+        document.body.append(el);
+
+        el.select();
+        el.setSelectionRange(0, value.length);
+
+        if (document.execCommand('copy')) {
+          success();
+        }
+
+        el.remove();
+      } else {
+        failure();
+      }
+    }
+  }
+
+}());
+</script>
+</body>
+</html>

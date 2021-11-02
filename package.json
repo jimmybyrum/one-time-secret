@@ -1,0 +1,16 @@
+{
+  "name": "ots",
+  "version": "0.1.0",
+  "description": "one time secret",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Jimmy Byrum <me@jimmybyrum.com>",
+  "license": "MIT",
+  "dependencies": {
+    "vault.js": "^1.0.3"
+  }
+}

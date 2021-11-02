@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: jimmy-ots
+  name: jimmy-ots
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jimmy-ots
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: jimmy-ots
+    spec:
+      containers:
+      - image: jimmy-ots
+        name: jimmy-ots
+        imagePullPolicy: Never
+        resources: {}
+        ports:
+          - containerPort: 3000
+status: {}
