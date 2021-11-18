@@ -65,10 +65,10 @@ label {
   font-size: 3rem;
 }
 #share-secret-link,
-#share-secret-copy {
+.copy-text {
   display: inline-block
 }
-#share-secret-copy {
+.copy-text {
   cursor: pointer;
 }
 #revealed-secret {
@@ -130,6 +130,7 @@ label {
     <input type="submit" />
   </form>
   <div id="revealed-secret"></div>
+  <span class="copy-text" data-copy-target="#revealed-secret" data-copied-text="Copied ☑️">Copy secret 🤫</span>
 </div>
 
 <div id="show-secret-expired"></div>
@@ -151,7 +152,7 @@ label {
 
 <div id="share-secret">
   <span id="share-secret-link"></span>
-  <span id="share-secret-copy" data-copied-text="Copied 📝">Copy link 📋</span>
+  <span class="copy-text" data-copy-target="#share-secret-link" data-copied-text="Copied 📝">Copy link 📋</span>
 </div>
 
 <script>
@@ -167,10 +168,12 @@ label {
   
   const shareSecret = document.getElementById('share-secret');
   const secretLink = document.getElementById('share-secret-link');
-  const copyLink = document.getElementById('share-secret-copy');
-  copyLink.addEventListener('click', onCopyLink);
-  const COPY_LINK = copyLink.innerText;
-  const COPY_LINK_COPIED = copyLink.getAttribute('data-copied-text');
+  const copyLinks = document.querySelectorAll('.copy-text');
+  copyLinks.forEach(function(copyLink) {
+    copyLink.addEventListener('click', function(e) {
+      onCopyLink(e, copyLink);
+    });
+  });
 
   const AUTH_REQUIRED = 'authorization required';
 
@@ -216,13 +219,16 @@ label {
     });
   }
 
-  function onCopyLink(e) {
+  function onCopyLink(e, copyLink) {
     e.preventDefault();
-    copyToClipboard(secretLink.innerText, () => {
-      copyLink.innerText = COPY_LINK_COPIED;
+    const targetNode = document.querySelector(copyLink.getAttribute('data-copy-target'));
+    const originalText = copyLink.innerText;
+    const copiedText = copyLink.getAttribute('data-copied-text');
+    copyToClipboard(targetNode.innerText, () => {
+      copyLink.innerText = copiedText;
       setTimeout(() => {
-        copyLink.innerText = COPY_LINK;
-      }, 1000);
+        copyLink.innerText = originalText;
+      }, 3000);
     }, err => {
       console.warn('copyToClipboard failed', err);
     });
