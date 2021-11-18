@@ -30,10 +30,19 @@ form {
 }
 fieldset {
   border-radius: 10px;
+  border-color: #ff5b24;
+}
+fieldset legend {
+  color: #ff5b24;
 }
 fieldset > * {
   display: block;
   margin-bottom: 1rem;
+}
+input[type="submit"] {
+  background-color: #ff5b24;
+  border-color: #ff5b24;
+  color: white;
 }
 input[type="submit"],
 label {
@@ -53,6 +62,7 @@ label {
 }
 #show-secret-expired {
   margin: 0 0 1rem;
+  font-size: 3rem;
 }
 #share-secret-link,
 #share-secret-copy {
@@ -101,10 +111,6 @@ label {
     background-color: #333;
     color: #efefef;
   }
-  input[type="submit"] {
-    background-color: #666;
-  }
-
   #share-secret,
   #revealed-secret {
     background-color: #444;
@@ -133,10 +139,9 @@ label {
     <legend>Create new secret 🤫</legend>
     <textarea name="secret" rows="5" required="required"></textarea>
     <label>Expires in:
-      <input name="minutes" type="number" min="1" step="1" value="10" />
+      <input name="minutes" type="number" min="1" step="1" value="60" />
       minutes ⏱
     </label>
-    <label>Delete password immediately after being shown <input name="expireAfterFetched" type="checkbox" checked="checked" /> 📜👀💥</label>
     <label>Password:
       <input name="password" type="password" placeholder="This is optional, but not a bad idea at all." /> 🔑
     </label>
@@ -178,10 +183,9 @@ label {
     e.preventDefault();
     const secret = ots.secret.value;
     const minutes = ots.minutes.value;
-    const expireAfterFetched = ots.expireAfterFetched.checked;
     const password = ots.password.value;
     const seconds = minutes * 60;
-    createSecret(secret, seconds, expireAfterFetched, password);
+    createSecret(secret, seconds, password);
   }
 
   function onPasswordSubmit(e) {
@@ -189,7 +193,7 @@ label {
     getSecret(secretId, secretPassword.password.value);
   }
 
-  function createSecret(value, seconds, expireAfterFetched, password) {
+  function createSecret(value, seconds, password) {
     const req = new Request('/api', {
       method: 'POST',
       headers: {
@@ -198,7 +202,6 @@ label {
       body: JSON.stringify({
         value: value,
         seconds: seconds,
-        expireAfterFetched: expireAfterFetched,
         password: password
       })
     });
@@ -246,7 +249,7 @@ label {
         revealedSecret.innerText = json.value;
         showSecret.style.display = 'block';
       } else if (json.err !== AUTH_REQUIRED) {
-        showSecretExpired.innerText = 'Secret not found';
+        showSecretExpired.innerText = '😶 🤐 🤷';
         showSecretExpired.style.display = 'block';
         history.pushState({}, null, '/');
         setTimeout(() => {

@@ -3,7 +3,7 @@ import { readFile } from 'fs';
 import { createHash } from 'crypto';
 import Memory from 'vault.js';
 
-const HOST = 'http://localhost';
+const HOST = process.env.HOST || 'localhost';
 const PORT = process.env.PORT || 3000;
 const MATCH = /[A-Za-z0-9]+/i;
 
@@ -21,7 +21,7 @@ createServer((req, res) => {
   } else if (urlRoot === '' && req.method === 'GET') {
     handleHtml(res);
   }
-}).listen(PORT, () => {
+}).listen(PORT, HOST, () => {
   console.log(`Server running at ${HOST}:${PORT}/`);
 });
 
@@ -41,10 +41,7 @@ function handleShow(req, res, secretId) {
         err: 'authorization required'
       }), 'utf-8');
     }
-    
-    if (secret.expireAfterFetched) {
-      Memory.remove(id);
-    }
+    Memory.remove(id);
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify(returnVal), 'utf-8');
   });
@@ -58,7 +55,6 @@ function handleCreate(req, res) {
     const id = createHash('md5').update(body).digest('hex');
     Memory.set(id, {
       value: json.value,
-      expireAfterFetched: json.expireAfterFetched,
       password: json.password
     }, {
       expires: `+${json.seconds} seconds`,
