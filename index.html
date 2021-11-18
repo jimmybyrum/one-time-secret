@@ -5,6 +5,35 @@
   <meta content="text/html;charset=utf-8" http-equiv="Content-Type">
   <meta content="utf-8" http-equiv="encoding">
 <style>
+:root {
+  --background-color: #fff;
+  --text-color: #000;
+  --accent-color: #ff5b24;
+  --accent-background-color: #efefef;
+  --link-color: #bfbfff;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background-color: #333;
+    --text-color: #efefef;
+    --accent-color: #ff5b24;
+    --accent-background-color: #444;
+  }
+}
+html,
+body,
+input,
+select,
+textarea {
+  background-color: var(--background-color);
+  color: var(--text-color);
+}
+.accent-box {
+  background-color: var(--accent-background-color);
+}
+a {
+  color: var(--link-color);
+}
 html {
   box-sizing: border-box;
   font-family: Arial, Helvetica, sans-serif;
@@ -30,23 +59,26 @@ form {
 }
 fieldset {
   border-radius: 10px;
-  border-color: #ff5b24;
+  border-color: var(--accent-color);
 }
 fieldset legend {
-  color: #ff5b24;
+  color: var(--accent-color);
 }
 fieldset > * {
   display: block;
   margin-bottom: 1rem;
 }
 input[type="submit"] {
-  background-color: #ff5b24;
-  border-color: #ff5b24;
+  background-color: var(--accent-color);
+  border-color: var(--accent-color);
   color: white;
 }
 input[type="submit"],
 label {
   cursor: pointer;
+}
+#expires-in * {
+  width: 25%;
 }
 #show-secret,
 #share-secret,
@@ -58,23 +90,29 @@ label {
   margin-top: 1rem;
   padding: 1rem;
   text-align: center;
-  background-color: #efefef;
+  background-color: var(--accent-background-color);
 }
 #show-secret-expired {
   margin: 0 0 1rem;
   font-size: 3rem;
 }
 #share-secret-link,
+#revealed-secret,
 .copy-text {
   display: inline-block
 }
 .copy-text {
   cursor: pointer;
+  display: inline-block;
+  padding: 2px 3px;
+  margin-left: .5rem;
+  border: 1px solid #ccc;
+  border-radius: 5px;
 }
-#revealed-secret {
+#revealed-secret-container {
   padding: 1rem;
   margin-bottom: 1rem;
-  background-color: #efefef;
+  background-color: var(--accent-background-color);
 }
 #revealed-secret-container,
 #revealed-secret:empty {
@@ -104,22 +142,6 @@ label {
     width: 75%;
   }
 }
-@media (prefers-color-scheme: dark) {
-  body,
-  input,
-  select,
-  textarea {
-    background-color: #333;
-    color: #efefef;
-  }
-  #share-secret,
-  #revealed-secret {
-    background-color: #444;
-  }
-  a {
-    color: #bfbfff;
-  }
-}
 </style>
 </head>
 <body>
@@ -130,7 +152,7 @@ label {
     <input type="password" name="password" placeholder="Enter secret password and press return" />
     <input type="submit" />
   </form>
-  <div id="revealed-secret-container">
+  <div id="revealed-secret-container" class="accent-box">
     <div id="revealed-secret"></div>
     <span class="copy-text" data-copy-target="#revealed-secret" data-copied-text="Copied ☑️">Copy secret 🤫</span>
   </div>
@@ -142,9 +164,13 @@ label {
   <fieldset>
     <legend>Create new secret 🤫</legend>
     <textarea name="secret" rows="5" required="required"></textarea>
-    <label>Expires in:
-      <input name="minutes" type="number" min="1" step="1" value="60" />
-      minutes ⏱
+    <label id="expires-in">Expires in:
+      <input name="time" type="number" min="1" max="60" step="1" value="1" />
+      <select name="scale">
+        <option value="days" data-singular="day" data-plural="days">day</option>
+        <option value="hours" data-singular="hour" data-plural="hours" selected="selected">hour</option>
+        <option value="minutes" data-singular="minute" data-plural="minutes">minute</option>
+      </select> ⏱
     </label>
     <label>Password:
       <input name="password" type="password" placeholder="This is optional, but not a bad idea at all." /> 🔑
@@ -153,7 +179,7 @@ label {
   </fieldset>
 </form>
 
-<div id="share-secret">
+<div id="share-secret" class="accent-box">
   <span id="share-secret-link"></span>
   <span class="copy-text" data-copy-target="#share-secret-link" data-copied-text="Copied 📝">Copy link 📋</span>
 </div>
@@ -169,6 +195,11 @@ label {
   const secretPassword = document.getElementById('sp');
   const showSecretExpired = document.getElementById('show-secret-expired');
   secretPassword.addEventListener('submit', onPasswordSubmit);
+
+  const expiresInTime = document.querySelector('#expires-in input[name="time"]');
+  const expiresInScale = document.querySelector('#expires-in select');
+  expiresInTime.addEventListener('change', onTimeChange);
+  expiresInTime.addEventListener('keyup', onTimeChange);
   
   const shareSecret = document.getElementById('share-secret');
   const secretLink = document.getElementById('share-secret-link');
@@ -189,10 +220,10 @@ label {
   function onSubmit(e) {
     e.preventDefault();
     const secret = ots.secret.value;
-    const minutes = ots.minutes.value;
+    const time = ots.time.value;
+    const scale = ots.scale.value;
     const password = ots.password.value;
-    const seconds = minutes * 60;
-    createSecret(secret, seconds, password);
+    createSecret(secret, time, scale, password);
   }
 
   function onPasswordSubmit(e) {
@@ -200,7 +231,7 @@ label {
     getSecret(secretId, secretPassword.password.value);
   }
 
-  function createSecret(value, seconds, password) {
+  function createSecret(value, time, scale, password) {
     const req = new Request('/api', {
       method: 'POST',
       headers: {
@@ -208,16 +239,16 @@ label {
       },
       body: JSON.stringify({
         value: value,
-        seconds: seconds,
+        time: time,
+        scale: scale,
         password: password
       })
     });
     fetch(req).then(response => {
       return response.json()
     }).then(json => {
-      console.log(json);
       const url = document.location.protocol + '//' + document.location.host + '?s=' + json.id;
-      secretLink.innerHTML = '<a href="?s=' + json.id + '">' + url + '</a>';
+      secretLink.innerHTML = url;
       shareSecret.style.display = 'block';
       ots.secret.value = '';
     });
@@ -267,10 +298,7 @@ label {
           showSecretExpired.style.display = 'none';
         }, 3000);
       }
-      // history.replaceState({}, document.title, '/');
-    }).catch(err => {
-      console.log(err);
-    });
+    }).catch(err => console.log(err));
   }
 
   function getSecretId() {
@@ -284,6 +312,26 @@ label {
       }
     });
     return secretId;
+  }
+
+  let previousValue = parseInt(expiresInTime.value, 10);
+  function onTimeChange(e) {
+    const newValue = parseInt(expiresInTime.value, 10);
+    if (!newValue) {
+      return;
+    }
+    let display;
+    if (newValue === 1 && previousValue !== 1) {
+      display = 'data-singular';
+    } else if (newValue !== 1 && previousValue === 1) {
+      display = 'data-plural';
+    }
+    previousValue = newValue;
+    if (display) {
+      Array.from(expiresInScale.options).forEach(function(item) {
+        item.innerText = item.getAttribute(display);
+      });
+    }
   }
 
   function copyToClipboard(value, success = () => null, failure = () => null) {
