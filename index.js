@@ -8,7 +8,7 @@ const PORT = process.env.PORT || 3000;
 const MATCH = /[A-Za-z0-9]+/i;
 const CONTENT_TYPE_HTML = { 'Content-Type': 'text/html' }
 const CONTENT_TYPE_JSON = { 'Content-Type': 'application/json' }
-const VALID_SCALE = ['days', 'hours', 'minutes'];
+const VALID_SCALE = ['day', 'hour', 'minute', 'days', 'hours', 'minutes'];
 
 createServer((req, res) => {
   const urlParts = req.url.split('/');
@@ -35,24 +35,31 @@ createServer((req, res) => {
 
 function handleShow(req, res, secretId) {
   const id = secretId.match(MATCH)[0];
-  const secret = Memory.get(id) || {};
-  const returnVal = {
-    value: secret.value
-  };
   let body = '';
   req.on('data', chunk => body += chunk);
   req.on('end', () => {
     const json = JSON.parse(sanitize(body));
-    if (secret.password && secret.password !== json.password) {
-      res.writeHead(401, { 'Content-Type': 'application/json' });
+    getSecret(id, json).then(secret => {
+      res.writeHead(200, CONTENT_TYPE_JSON);
+      res.end(JSON.stringify({
+        value: secret.value
+      }), 'utf-8');
+    }).catch(e => {
+      res.writeHead(401, CONTENT_TYPE_JSON);
       return res.end(JSON.stringify({
         err: 'authorization required'
       }), 'utf-8');
-    }
-    Memory.remove(id);
-    res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify(returnVal), 'utf-8');
+    });
   });
+}
+
+export function getSecret(id, json) {
+  const secret = Memory.get(id) || {};
+  if (secret.password && secret.password !== json.password) {
+    return Promise.reject('password-required');
+  }
+  Memory.remove(id);
+  return Promise.resolve(secret);
 }
 
 function handleCreate(req, res) {
@@ -60,23 +67,31 @@ function handleCreate(req, res) {
   req.on('data', chunk => body += chunk);
   req.on('end', () => {
     const json = JSON.parse(sanitize(body));
-    if (isNaN(json.time)) {
+    createSecret(json).then(id => {
+      res.writeHead(200, CONTENT_TYPE_JSON);
+      res.end(JSON.stringify({id: id}), 'utf-8');
+    }).catch(e => {
       return badData(res);
-    }
-    if (VALID_SCALE.indexOf(json.scale) < 0) {
-      return badData(res);
-    }
-    const salt = new Date().valueOf();
-    const id = createHash('md5').update(body + salt).digest('hex');
-    Memory.set(id, {
-      value: json.value,
-      password: json.password
-    }, {
-      expires: `+${json.time} ${json.scale}`,
     });
-    res.writeHead(200, CONTENT_TYPE_JSON);
-    res.end(JSON.stringify({id: id}), 'utf-8');
   });
+}
+
+export function createSecret(json) {
+  if (isNaN(json.time)) {
+    return Promise.reject('bad-data');
+  }
+  if (VALID_SCALE.indexOf(json.scale) < 0) {
+    return Promise.reject('bad-data');
+  }
+  const salt = new Date().valueOf();
+  const id = createHash('md5').update(json.value + salt).digest('hex');
+  Memory.set(id, {
+    value: json.value,
+    password: json.password
+  }, {
+    expires: `+${json.time} ${json.scale}`,
+  });
+  return Promise.resolve(id);
 }
 
 function handleHtml(req, res) {
@@ -112,4 +127,3 @@ function rateLimit(req) {
   }, 1000);
   return Promise.resolve();
 }
-
