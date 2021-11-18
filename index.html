@@ -8,7 +8,7 @@
 html {
   box-sizing: border-box;
   font-family: Arial, Helvetica, sans-serif;
-  font-size: 15px;
+  font-size: 16px;
 }
 *, *:before, *:after {
   box-sizing: inherit;
@@ -76,6 +76,7 @@ label {
   margin-bottom: 1rem;
   background-color: #efefef;
 }
+#revealed-secret-container,
 #revealed-secret:empty {
   display: none;
 }
@@ -129,8 +130,10 @@ label {
     <input type="password" name="password" placeholder="Enter secret password and press return" />
     <input type="submit" />
   </form>
-  <div id="revealed-secret"></div>
-  <span class="copy-text" data-copy-target="#revealed-secret" data-copied-text="Copied ☑️">Copy secret 🤫</span>
+  <div id="revealed-secret-container">
+    <div id="revealed-secret"></div>
+    <span class="copy-text" data-copy-target="#revealed-secret" data-copied-text="Copied ☑️">Copy secret 🤫</span>
+  </div>
 </div>
 
 <div id="show-secret-expired"></div>
@@ -161,6 +164,7 @@ label {
   ots.addEventListener('submit', onSubmit);
 
   const showSecret = document.getElementById('show-secret');
+  const revealedSecretContainer = document.getElementById('revealed-secret-container');
   const revealedSecret = document.getElementById('revealed-secret');
   const secretPassword = document.getElementById('sp');
   const showSecretExpired = document.getElementById('show-secret-expired');
@@ -252,6 +256,7 @@ label {
       return response.json()
     }).then(json => {
       if (json.value) {
+        revealedSecretContainer.style.display = 'block';
         revealedSecret.innerText = json.value;
         showSecret.style.display = 'block';
       } else if (json.err !== AUTH_REQUIRED) {
