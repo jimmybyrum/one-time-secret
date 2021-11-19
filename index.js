@@ -1,14 +1,13 @@
 import { createServer } from 'http';
 import { readFile } from 'fs';
-import { createHash } from 'crypto';
-import Memory from 'vault.js';
+import { getSecret, createSecret } from './app.js';
 
 const HOST = process.env.HOST || 'localhost';
 const PORT = process.env.PORT || 3000;
 const MATCH = /[A-Za-z0-9]+/i;
 const CONTENT_TYPE_HTML = { 'Content-Type': 'text/html' }
 const CONTENT_TYPE_JSON = { 'Content-Type': 'application/json' }
-const VALID_SCALE = ['day', 'hour', 'minute', 'days', 'hours', 'minutes'];
+let requestsByAddress = {};
 
 createServer((req, res) => {
   const urlParts = req.url.split('/');
@@ -53,15 +52,6 @@ function handleShow(req, res, secretId) {
   });
 }
 
-export function getSecret(id, json) {
-  const secret = Memory.get(id) || {};
-  if (secret.password && secret.password !== json.password) {
-    return Promise.reject('password-required');
-  }
-  Memory.remove(id);
-  return Promise.resolve(secret);
-}
-
 function handleCreate(req, res) {
   let body = '';
   req.on('data', chunk => body += chunk);
@@ -74,24 +64,6 @@ function handleCreate(req, res) {
       return badData(res);
     });
   });
-}
-
-export function createSecret(json) {
-  if (isNaN(json.time)) {
-    return Promise.reject('bad-data');
-  }
-  if (VALID_SCALE.indexOf(json.scale) < 0) {
-    return Promise.reject('bad-data');
-  }
-  const salt = new Date().valueOf();
-  const id = createHash('md5').update(json.value + salt).digest('hex');
-  Memory.set(id, {
-    value: json.value,
-    password: json.password
-  }, {
-    expires: `+${json.time} ${json.scale}`,
-  });
-  return Promise.resolve(id);
 }
 
 function handleHtml(req, res) {
@@ -112,18 +84,17 @@ function sanitize(str) {
 	});
 }
 
-let requests = {};
 function rateLimit(req) {
   const address = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
-  if (!requests[address]) {
-    requests[address] = 0
+  if (!requestsByAddress[address]) {
+    requestsByAddress[address] = 0
   }
-  if (requests[address] > 5) {
+  if (requestsByAddress[address] > 5) {
     return Promise.reject();
   }
-  requests[address]++;
+  requestsByAddress[address]++;
   setTimeout(() => {
-    requests[address]--;
+    requestsByAddress[address]--;
   }, 1000);
   return Promise.resolve();
 }

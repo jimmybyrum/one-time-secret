@@ -6,11 +6,17 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --detectOpenHandles"
+  },
+  "jest": {
+    "transform": {}
   },
   "author": "Jimmy Byrum <me@jimmybyrum.com>",
   "license": "MIT",
   "dependencies": {
     "vault.js": "^1.0.3"
+  },
+  "devDependencies": {
+    "jest": "^27.3.1"
   }
 }
