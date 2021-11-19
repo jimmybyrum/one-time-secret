@@ -1,5 +1,5 @@
 import { createHash } from 'crypto';
-import { Memory as Memory } from 'vault.js';
+import Memory from 'vault.js';
 
 const VALID_SCALE = ['day', 'hour', 'minute', 'days', 'hours', 'minutes'];
 
