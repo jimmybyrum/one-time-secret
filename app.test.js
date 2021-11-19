@@ -49,7 +49,7 @@ async function _createSecret(password) {
   return await createSecret({
     value: SECRET_VALUE,
     time: 1,
-    scale: 'minutes',
+    scale: 'minute',
     password: password
   });
 }

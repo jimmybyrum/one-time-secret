@@ -6,7 +6,12 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --detectOpenHandles"
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --detectOpenHandles",
+    "build": "docker build . -t jimmy-ots",
+    "run": "docker run -dp 3000:3000 jimmy-ots",
+    "deploy": "kubectl apply -f manifest.yml",
+    "release": "kubectl expose deployment jimmy-ots --type=NodePort --port=3000",
+    "host": "kubectl port-forward deploy/jimmy-ots 3000:3000"
   },
   "jest": {
     "transform": {}
