@@ -204,8 +204,8 @@ label {
   const shareSecret = document.getElementById('share-secret');
   const secretLink = document.getElementById('share-secret-link');
   const copyLinks = document.querySelectorAll('.copy-text');
-  copyLinks.forEach(function(copyLink) {
-    copyLink.addEventListener('click', function(e) {
+  copyLinks.forEach(copyLink => {
+    copyLink.addEventListener('click', e => {
       onCopyLink(e, copyLink);
     });
   });
@@ -328,7 +328,7 @@ label {
     }
     previousValue = newValue;
     if (display) {
-      Array.from(expiresInScale.options).forEach(function(item) {
+      Array.from(expiresInScale.options).forEach(item => {
         item.innerText = item.getAttribute(display);
       });
     }
