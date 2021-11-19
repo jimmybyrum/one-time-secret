@@ -1,7 +1,14 @@
-import { getSecret, createSecret } from './app';
+import { getSecret, createSecret, setContainer } from './app.js';
+import { dbConnect } from './db.js';
 
 const SECRET_VALUE = 'secret-value';
 const SECRET_PASSWORD = 'secret-password';
+
+beforeAll(async () => {
+  return await dbConnect()
+    .then(container => setContainer(container))
+    .catch(e => console.log('dbConnect error:', e));
+});
 
 test('can create secret without password', async () => {
   const id = await _createSecret();

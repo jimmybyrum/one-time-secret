@@ -1,7 +1,13 @@
 import { createHash } from 'crypto';
 const VALID_SCALE = ['day', 'hour', 'minute', 'days', 'hours', 'minutes'];
 
-export async function getSecret(container, id, json) {
+let container;
+
+export function setContainer(_container) {
+  container = _container;
+}
+
+export async function getSecret(id, json) {
   const query = `SELECT * from c WHERE c.id="${id}"`;
   const { resources: items } = await container.items.query({ query: query }).fetchAll();
   const secret = items[0] || {};
@@ -14,7 +20,7 @@ export async function getSecret(container, id, json) {
   return Promise.resolve(secret);
 }
 
-export async function createSecret(container, json) {
+export async function createSecret(json) {
   if (isNaN(json.time)) {
     return Promise.reject('bad-data');
   }
