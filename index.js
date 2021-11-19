@@ -1,13 +1,19 @@
 import { createServer } from 'http';
 import { readFile } from 'fs';
 import { getSecret, createSecret } from './app.js';
+import { CosmosClient } from '@azure/cosmos';
+
+import dbConfig from './dbConfig.js';
+const { endpoint, key, databaseId, containerId } = dbConfig;
 
 const HOST = process.env.HOST || 'localhost';
-const PORT = process.env.PORT || 3000;
+const PORT = parseInt(process.env.PORT || 3000, 10);
 const MATCH = /[A-Za-z0-9]+/i;
 const CONTENT_TYPE_HTML = { 'Content-Type': 'text/html' }
 const CONTENT_TYPE_JSON = { 'Content-Type': 'application/json' }
 let requestsByAddress = {};
+
+let container;
 
 createServer((req, res) => {
   const urlParts = req.url.split('/');
@@ -29,8 +35,33 @@ createServer((req, res) => {
     res.end('Rate limit exceeded.', 'utf-8');
   });
 }).listen(PORT, HOST, () => {
+  dbConnect().then(() => {
+    console.log(`Connected to ${endpoint}${container.id}`);
+  }).catch(e => {
+    console.log('dbConnect error:', e);
+  });
   console.log(`Server running at ${HOST}:${PORT}/`);
 });
+
+async function dbConnect() {
+  const client = new CosmosClient({ endpoint, key });
+  const database = client.database(databaseId);
+  container = database.container(containerId);
+  await dbCreate(client, databaseId, containerId);
+  return container;
+}
+async function dbCreate(client, databaseId, containerId) {
+  const partitionKey = dbConfig.partitionKey;
+  await client.databases.createIfNotExists({
+    id: databaseId
+  });
+  await client.database(databaseId).containers.createIfNotExists({
+    id: containerId,
+    partitionKey
+  }, {
+    offerThroughput: 400
+  });
+}
 
 function handleShow(req, res, secretId) {
   const id = secretId.match(MATCH)[0];
@@ -38,7 +69,7 @@ function handleShow(req, res, secretId) {
   req.on('data', chunk => body += chunk);
   req.on('end', () => {
     const json = JSON.parse(sanitize(body));
-    getSecret(id, json).then(secret => {
+    getSecret(container, id, json).then(secret => {
       res.writeHead(200, CONTENT_TYPE_JSON);
       res.end(JSON.stringify({
         value: secret.value
@@ -57,7 +88,7 @@ function handleCreate(req, res) {
   req.on('data', chunk => body += chunk);
   req.on('end', () => {
     const json = JSON.parse(sanitize(body));
-    createSecret(json).then(id => {
+    createSecret(container, json).then(id => {
       res.writeHead(200, CONTENT_TYPE_JSON);
       res.end(JSON.stringify({id: id}), 'utf-8');
     }).catch(e => {
