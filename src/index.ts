@@ -6,7 +6,7 @@ import { dbConnect } from './db';
 import { env } from 'process';
 
 const HOST = env.HOST || 'localhost';
-const PORT = parseInt(env?.PORT || '3000', 10) || 3000;
+const PORT = parseInt(env?.PORT || '3000', 10);
 const MATCH = /[A-Za-z0-9]+/i;
 const CONTENT_TYPE_HTML = { 'Content-Type': 'text/html' }
 const CONTENT_TYPE_JSON = { 'Content-Type': 'application/json' }
