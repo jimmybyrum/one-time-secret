@@ -163,7 +163,7 @@ label {
 <form id="ots">
   <fieldset>
     <legend>Create new secret 🤫</legend>
-    <textarea name="secret" rows="5" required="required"></textarea>
+    <textarea name="secret" rows="5" maxlength="1000" required="required"></textarea>
     <label id="expires-in">Expires in:
       <input name="time" type="number" min="1" max="60" step="1" value="1" />
       <select name="scale">
@@ -173,7 +173,7 @@ label {
       </select> ⏱
     </label>
     <label>Password:
-      <input name="password" type="password" placeholder="This is optional, but not a bad idea at all." /> 🔑
+      <input name="password" type="password" maxlength="50" placeholder="This is optional, but not a bad idea at all." /> 🔑
     </label>
     <input type="submit" value="Submit" />
   </fieldset>

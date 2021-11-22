@@ -1,17 +1,29 @@
 import { createServer, IncomingMessage, ServerResponse } from 'http';
 import { readFile } from 'fs';
 import { getSecret, createSecret, setContainer } from './app';
-import { RequestByAddress } from './types';
+import { RequestByAddressCache, Secret } from './types';
 import { dbConnect } from './db';
 import { env } from 'process';
 
 const HOST = env.HOST || 'localhost';
 const PORT = parseInt(env?.PORT || '3000', 10);
 const MATCH = /[A-Za-z0-9]+/i;
+const MAX_VALUE_LENGTH = 1000;
+const MAX_PASSWORD_LENGTH = 50;
+const HTTP = {
+  OK: 200,
+  BAD_REQUEST: 400,
+  UNAUTHORIZED: 401,
+  TOO_MANY_REQUESTS: 429
+};
+const RATE_LIMIT = {
+  REQUESTS: 5,
+  INTERVAL: 1000
+};
 const CONTENT_TYPE_HTML = { 'Content-Type': 'text/html' }
 const CONTENT_TYPE_JSON = { 'Content-Type': 'application/json' }
 
-let requestsByAddress: RequestByAddress = {};
+let requestsByAddress: RequestByAddressCache = {};
 
 createServer((req, res) => {
   const urlParts = req?.url?.split('/') ?? '';
@@ -29,7 +41,7 @@ createServer((req, res) => {
       handleHtml(req, res);
     }
   }).catch(() => {
-    res.writeHead(429, CONTENT_TYPE_HTML);
+    res.writeHead(HTTP.TOO_MANY_REQUESTS, CONTENT_TYPE_HTML);
     res.end('Rate limit exceeded.', 'utf-8');
   });
 }).listen(PORT, HOST, () => {
@@ -50,12 +62,12 @@ function handleShow(req: IncomingMessage, res: ServerResponse, secretId: string)
   req.on('end', () => {
     const json = JSON.parse(sanitize(body));
     getSecret(id, json).then(secret => {
-      res.writeHead(200, CONTENT_TYPE_JSON);
+      res.writeHead(HTTP.OK, CONTENT_TYPE_JSON);
       res.end(JSON.stringify({
         value: secret.value
       }), 'utf-8');
     }).catch(e => {
-      res.writeHead(401, CONTENT_TYPE_JSON);
+      res.writeHead(HTTP.UNAUTHORIZED, CONTENT_TYPE_JSON);
       return res.end(JSON.stringify({
         err: 'authorization required'
       }), 'utf-8');
@@ -67,9 +79,12 @@ function handleCreate(req: IncomingMessage, res: ServerResponse) {
   let body = '';
   req.on('data', chunk => body += chunk);
   req.on('end', () => {
-    const json = JSON.parse(sanitize(body));
+    const json: Secret = JSON.parse(sanitize(body));
+    if (json.value.length > MAX_VALUE_LENGTH || (json.password && json.password.length > MAX_PASSWORD_LENGTH)) {
+      return badData(res)
+    }
     createSecret(json).then(id => {
-      res.writeHead(200, CONTENT_TYPE_JSON);
+      res.writeHead(HTTP.OK, CONTENT_TYPE_JSON);
       res.end(JSON.stringify({ id: id }), 'utf-8');
     }).catch(e => {
       return badData(res);
@@ -79,13 +94,13 @@ function handleCreate(req: IncomingMessage, res: ServerResponse) {
 
 function handleHtml(req: IncomingMessage, res: ServerResponse) {
   readFile('index.html', (error, content) => {
-    res.writeHead(200, CONTENT_TYPE_HTML);
+    res.writeHead(HTTP.OK, CONTENT_TYPE_HTML);
     res.end(content, 'utf-8');
   });
 }
 
 function badData(res: ServerResponse) {
-  res.writeHead(400, CONTENT_TYPE_HTML);
+  res.writeHead(HTTP.BAD_REQUEST, CONTENT_TYPE_HTML);
   res.end('Bad data.', 'utf-8');
 }
 
@@ -96,16 +111,16 @@ function sanitize(str: string) {
 }
 
 function rateLimit(req: IncomingMessage) {
-  const address: string | string[] = (req.headers['x-forwarded-for'] ?? req.socket.remoteAddress ?? '').toString();
+  const address: string | string[] = (req.headers['x-forwarded-for'] ?? req.socket.remoteAddress ?? 'unknown').toString();
   if (!requestsByAddress[address]) {
     requestsByAddress[address] = 0
   }
-  if (requestsByAddress[address] > 5) {
+  if (requestsByAddress[address] > RATE_LIMIT.REQUESTS) {
     return Promise.reject();
   }
   requestsByAddress[address]++;
   setTimeout(() => {
     requestsByAddress[address]--;
-  }, 1000);
+  }, RATE_LIMIT.INTERVAL);
   return Promise.resolve();
 }
