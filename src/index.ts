@@ -1,22 +1,26 @@
 import { createServer, IncomingMessage, ServerResponse } from 'http';
-import { readFile } from 'fs';
+import { readFile } from 'fs/promises';
 import { getSecret, createSecret, setContainer } from './app';
 import { RequestByAddressCache, Secret } from './types';
 import { dbConnect } from './db';
 import { env } from 'process';
+import internal from "stream";
 
 const HOST = env.HOST || 'localhost';
 const PORT = parseInt(env?.PORT || '3000', 10);
 const MATCH = /[A-Za-z0-9]+/i;
 const MAX_VALUE_LENGTH = 1000;
 const MAX_PASSWORD_LENGTH = 50;
-const HTTP = {
-  OK: 200,
-  BAD_REQUEST: 400,
-  UNAUTHORIZED: 401,
-  TOO_MANY_REQUESTS: 429
-};
+enum HTTP {
+  OK = 200,
+  BAD_REQUEST = 400,
+  UNAUTHORIZED = 401,
+  TOO_MANY_REQUESTS = 429,
+  INTERNAL_ERROR = 500
+}
 const RATE_LIMIT = {
+  KEY: 'rate-limit-exceeded',
+  MESSAGE: 'Rate limit exceeded.',
   REQUESTS: 5,
   INTERVAL: 1000
 };
@@ -40,9 +44,13 @@ createServer((req, res) => {
     } else if (urlRoot === '' && req.method === 'GET') {
       handleHtml(req, res);
     }
-  }).catch(() => {
-    res.writeHead(HTTP.TOO_MANY_REQUESTS, CONTENT_TYPE_HTML);
-    res.end('Rate limit exceeded.', 'utf-8');
+  }).catch((e) => {
+    if (e.toString() === RATE_LIMIT.KEY) {
+      res.writeHead(HTTP.TOO_MANY_REQUESTS, CONTENT_TYPE_HTML);
+      res.end(RATE_LIMIT.MESSAGE, 'utf-8');
+    } else {
+      internalError(res);
+    }
   });
 }).listen(PORT, HOST, () => {
   dbConnect()
@@ -93,15 +101,20 @@ function handleCreate(req: IncomingMessage, res: ServerResponse) {
 }
 
 function handleHtml(req: IncomingMessage, res: ServerResponse) {
-  readFile('index.html', (error, content) => {
+  readFile('index.html').then(content => {
     res.writeHead(HTTP.OK, CONTENT_TYPE_HTML);
     res.end(content, 'utf-8');
-  });
+  }).catch(() => internalError(res));
 }
 
 function badData(res: ServerResponse) {
   res.writeHead(HTTP.BAD_REQUEST, CONTENT_TYPE_HTML);
   res.end('Bad data.', 'utf-8');
+}
+
+function internalError(res: ServerResponse) {
+  res.writeHead(HTTP.INTERNAL_ERROR, CONTENT_TYPE_HTML);
+  res.end('Internal server error', 'utf-8');
 }
 
 function sanitize(str: string) {
@@ -116,7 +129,7 @@ function rateLimit(req: IncomingMessage) {
     requestsByAddress[address] = 0
   }
   if (requestsByAddress[address] > RATE_LIMIT.REQUESTS) {
-    return Promise.reject();
+    return Promise.reject(RATE_LIMIT.KEY);
   }
   requestsByAddress[address]++;
   setTimeout(() => {
