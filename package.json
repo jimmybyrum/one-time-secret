@@ -6,11 +6,11 @@
   "scripts": {
     "start": "tsc && node dist/index",
     "test": "tsc && jest --detectOpenHandles",
-    "build": "tsc && docker build . -t jimmy-ots",
-    "run": "docker run -dp 3000:3000 jimmy-ots",
+    "build": "tsc && docker build . -t one-time-secret",
+    "run": "docker run -dp 3000:3000 one-time-secret",
     "deploy": "kubectl apply -f manifest.yml",
-    "release": "kubectl expose deployment jimmy-ots --type=NodePort --port=3000",
-    "host": "kubectl port-forward deploy/jimmy-ots 3000:3000"
+    "release": "kubectl expose deployment one-time-secret --type=NodePort --port=3000",
+    "host": "kubectl port-forward deploy/one-time-secret 3000:3000"
   },
   "jest": {
     "preset": "ts-jest",

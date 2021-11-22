@@ -3,23 +3,23 @@ kind: Deployment
 metadata:
   creationTimestamp: null
   labels:
-    app: jimmy-ots
-  name: jimmy-ots
+    app: one-time-secret
+  name: one-time-secret
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: jimmy-ots
+      app: one-time-secret
   strategy: {}
   template:
     metadata:
       creationTimestamp: null
       labels:
-        app: jimmy-ots
+        app: one-time-secret
     spec:
       containers:
-      - image: jimmy-ots
-        name: jimmy-ots
+      - image: one-time-secret
+        name: one-time-secret
         imagePullPolicy: Never
         resources: {}
         ports:
