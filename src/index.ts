@@ -4,20 +4,12 @@ import { getSecret, createSecret, setContainer } from './app';
 import { RequestByAddressCache, Secret } from './types';
 import { dbConnect } from './db';
 import { env } from 'process';
-import internal from "stream";
 
 const HOST = env.HOST || 'localhost';
 const PORT = parseInt(env?.PORT || '3000', 10);
 const MATCH = /[A-Za-z0-9]+/i;
 const MAX_VALUE_LENGTH = 1000;
 const MAX_PASSWORD_LENGTH = 50;
-enum HTTP {
-  OK = 200,
-  BAD_REQUEST = 400,
-  UNAUTHORIZED = 401,
-  TOO_MANY_REQUESTS = 429,
-  INTERNAL_ERROR = 500
-}
 const RATE_LIMIT = {
   KEY: 'rate-limit-exceeded',
   MESSAGE: 'Rate limit exceeded.',
@@ -26,6 +18,14 @@ const RATE_LIMIT = {
 };
 const CONTENT_TYPE_HTML = { 'Content-Type': 'text/html' }
 const CONTENT_TYPE_JSON = { 'Content-Type': 'application/json' }
+
+enum HTTP {
+  OK = 200,
+  BAD_REQUEST = 400,
+  UNAUTHORIZED = 401,
+  TOO_MANY_REQUESTS = 429,
+  INTERNAL_ERROR = 500
+}
 
 let requestsByAddress: RequestByAddressCache = {};
 
