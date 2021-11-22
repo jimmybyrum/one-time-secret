@@ -1,5 +1,6 @@
 import { CosmosClient } from '@azure/cosmos';
-import dbConfig from './dbConfig.js';
+import dbConfig from './dbConfig';
+
 const { endpoint, key, databaseId, containerId, partitionKey } = dbConfig;
 
 export async function dbConnect() {
@@ -11,7 +12,7 @@ export async function dbConnect() {
   return container;
 }
 
-async function dbCreate(client, databaseId, containerId) {
+async function dbCreate(client: CosmosClient, databaseId: string, containerId: string) {
   await client.databases.createIfNotExists({
     id: databaseId
   });

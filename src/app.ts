@@ -1,13 +1,16 @@
+import { Container } from '@azure/cosmos';
 import { createHash } from 'crypto';
+import { Secret, SecretConfig } from './types'
+
 const VALID_SCALE = ['day', 'hour', 'minute', 'days', 'hours', 'minutes'];
 
-let container;
+let container: Container;
 
-export function setContainer(_container) {
+export function setContainer(_container: Container) {
   container = _container;
 }
 
-export async function getSecret(id, json) {
+export async function getSecret(id: string, json: SecretConfig) {
   const query = `SELECT * from c WHERE c.id="${id}"`;
   const { resources: items } = await container.items.query({ query: query }).fetchAll();
   const secret = items[0] || {};
@@ -20,16 +23,16 @@ export async function getSecret(id, json) {
   return Promise.resolve(secret);
 }
 
-export async function createSecret(json) {
-  if (isNaN(json.time)) {
+export async function createSecret(json: Secret) {
+  if (!json.time || isNaN(json.time)) {
     return Promise.reject('bad-data');
   }
-  if (VALID_SCALE.indexOf(json.scale) < 0) {
+  if (typeof json.scale !== 'string' || VALID_SCALE.indexOf(json.scale) < 0) {
     return Promise.reject('bad-data');
   }
   const salt = new Date().valueOf();
   const id = createHash('md5').update(json.value + salt).digest('hex');
-  let secret = {
+  let secret: Secret = {
     id: id,
     value: json.value,
     ttl: timeScaleToSeconds(json.time, json.scale)
@@ -38,10 +41,10 @@ export async function createSecret(json) {
     secret.password = json.password;
   }
   const { resource: createdItem } = await container.items.create(secret);
-  return Promise.resolve(createdItem.id);
+  return Promise.resolve(createdItem?.id);
 }
 
-function timeScaleToSeconds(time, scale) {
+function timeScaleToSeconds(time: number, scale: string) {
   switch (scale) {
     case 'minute':
     case 'minutes':

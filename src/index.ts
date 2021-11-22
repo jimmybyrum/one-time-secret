@@ -1,17 +1,20 @@
-import { createServer } from 'http';
+import { createServer, IncomingMessage, ServerResponse } from 'http';
 import { readFile } from 'fs';
-import { getSecret, createSecret, setContainer } from './app.js';
-import { dbConnect } from './db.js';
+import { getSecret, createSecret, setContainer } from './app';
+import { RequestByAddress } from './types';
+import { dbConnect } from './db';
+import { env } from 'process';
 
-const HOST = process.env.HOST || 'localhost';
-const PORT = parseInt(process.env.PORT || 3000, 10);
+const HOST = env.HOST || 'localhost';
+const PORT = parseInt(env?.PORT || '3000', 10) || 3000;
 const MATCH = /[A-Za-z0-9]+/i;
 const CONTENT_TYPE_HTML = { 'Content-Type': 'text/html' }
 const CONTENT_TYPE_JSON = { 'Content-Type': 'application/json' }
-let requestsByAddress = {};
+
+let requestsByAddress: RequestByAddress = {};
 
 createServer((req, res) => {
-  const urlParts = req.url.split('/');
+  const urlParts = req?.url?.split('/') ?? '';
   const urlRoot = urlParts[0];
   const path = urlParts[1];
   const secretId = urlParts[2];
@@ -36,8 +39,12 @@ createServer((req, res) => {
   console.log(`Server running at ${HOST}:${PORT}/`);
 });
 
-function handleShow(req, res, secretId) {
-  const id = secretId.match(MATCH)[0];
+function handleShow(req: IncomingMessage, res: ServerResponse, secretId: string) {
+  const matches = secretId?.match(MATCH);
+  const id = matches?.length && matches[0];
+  if (!id) {
+    return badData(res);
+  }
   let body = '';
   req.on('data', chunk => body += chunk);
   req.on('end', () => {
@@ -56,40 +63,40 @@ function handleShow(req, res, secretId) {
   });
 }
 
-function handleCreate(req, res) {
+function handleCreate(req: IncomingMessage, res: ServerResponse) {
   let body = '';
   req.on('data', chunk => body += chunk);
   req.on('end', () => {
     const json = JSON.parse(sanitize(body));
     createSecret(json).then(id => {
       res.writeHead(200, CONTENT_TYPE_JSON);
-      res.end(JSON.stringify({id: id}), 'utf-8');
+      res.end(JSON.stringify({ id: id }), 'utf-8');
     }).catch(e => {
       return badData(res);
     });
   });
 }
 
-function handleHtml(req, res) {
+function handleHtml(req: IncomingMessage, res: ServerResponse) {
   readFile('index.html', (error, content) => {
     res.writeHead(200, CONTENT_TYPE_HTML);
     res.end(content, 'utf-8');
   });
 }
 
-function badData(res) {
+function badData(res: ServerResponse) {
   res.writeHead(400, CONTENT_TYPE_HTML);
   res.end('Bad data.', 'utf-8');
 }
 
-function sanitize(str) {
-	return str.replace(/javascript:/gi, '').replace(/\^\w-_. ]/gi, c => {
-		return `&#${c.charCodeAt(0)};`;
-	});
+function sanitize(str: string) {
+  return str.replace(/javascript:/gi, '').replace(/\^\w-_. ]/gi, c => {
+    return `&#${c.charCodeAt(0)};`;
+  });
 }
 
-function rateLimit(req) {
-  const address = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+function rateLimit(req: IncomingMessage) {
+  const address: string | string[] = (req.headers['x-forwarded-for'] ?? req.socket.remoteAddress ?? '').toString();
   if (!requestsByAddress[address]) {
     requestsByAddress[address] = 0
   }

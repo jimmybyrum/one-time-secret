@@ -1,5 +1,5 @@
-import { getSecret, createSecret, setContainer } from './app.js';
-import { dbConnect } from './db.js';
+import { getSecret, createSecret, setContainer } from './app';
+import { dbConnect } from './db';
 
 const SECRET_VALUE = 'secret-value';
 const SECRET_PASSWORD = 'secret-password';
@@ -17,8 +17,11 @@ test('can create secret without password', async () => {
 
 test('can get secret without password', async () => {
   const id = await _createSecret();
-  const secret = await getSecret(id, {});
-  expect(secret.value).toEqual(SECRET_VALUE);
+  expect(typeof id).toBe('string');
+  if (id) {
+    const secret = await getSecret(id, {});
+    expect(secret.value).toEqual(SECRET_VALUE);
+  }
 });
 
 test('can create secret with password', async () => {
@@ -28,16 +31,22 @@ test('can create secret with password', async () => {
 
 test('should prompt for password', async () => {
   const id = await _createSecret(SECRET_PASSWORD);
-  const s = getSecret(id, {});
-  await expect(s).rejects.toEqual('password-required');
+  expect(typeof id).toBe('string');
+  if (id) {
+    const s = getSecret(id, {});
+    await expect(s).rejects.toEqual('password-required');
+  }
 });
 
 test('can get secret with password', async () => {
   const id = await _createSecret(SECRET_PASSWORD);
-  const secret = await getSecret(id, {
-    password: SECRET_PASSWORD
-  });
-  expect(secret.value).toEqual(SECRET_VALUE);
+  expect(typeof id).toBe('string');
+  if (id) {
+    const secret = await getSecret(id, {
+      password: SECRET_PASSWORD
+    });
+    expect(secret.value).toEqual(SECRET_VALUE);
+  }
 });
 
 test('should not find a secret', async () => {
@@ -45,7 +54,7 @@ test('should not find a secret', async () => {
   expect(secret).toEqual({});
 });
 
-async function _createSecret(password) {
+async function _createSecret(password?: string) {
   return await createSecret({
     value: SECRET_VALUE,
     time: 1,
