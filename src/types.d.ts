@@ -11,6 +11,6 @@ export type SecretConfig = {
   password?: string;
 }
 
-export type RequestByAddress = {
+export type RequestByAddressCache = {
   [key: string]: any;
 }
