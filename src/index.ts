@@ -10,14 +10,15 @@ const PORT = parseInt(env?.PORT || '3000', 10);
 const MATCH = /[A-Za-z0-9]+/i;
 const MAX_VALUE_LENGTH = 1000;
 const MAX_PASSWORD_LENGTH = 50;
-const RATE_LIMIT = {
-  KEY: 'rate-limit-exceeded',
-  MESSAGE: 'Rate limit exceeded.',
-  REQUESTS: 5,
-  INTERVAL: 1000
-};
 const CONTENT_TYPE_HTML = { 'Content-Type': 'text/html' }
 const CONTENT_TYPE_JSON = { 'Content-Type': 'application/json' }
+
+enum RATE_LIMIT {
+  KEY = 'rate-limit-exceeded',
+  MESSAGE = 'Rate limit exceeded.',
+  REQUESTS = 5,
+  INTERVAL = 1000
+}
 
 enum HTTP {
   OK = 200,
