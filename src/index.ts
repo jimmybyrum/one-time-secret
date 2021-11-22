@@ -1,8 +1,9 @@
 import { createServer, IncomingMessage, ServerResponse } from 'http';
 import { readFile } from 'fs/promises';
-import { getSecret, createSecret, setContainer } from './app';
-import { RequestByAddressCache, Secret } from './types';
-import { dbConnect } from './db';
+import { App } from './app';
+import { Errors, RequestByAddressCache, Secret } from './types';
+import { CosmosDataStore } from './db/cosmos';
+import dbConfig from './dbConfig';
 import { env } from 'process';
 
 const HOST = env.HOST || 'localhost';
@@ -30,35 +31,42 @@ enum HTTP {
 
 let requestsByAddress: RequestByAddressCache = {};
 
-createServer((req, res) => {
-  const urlParts = req?.url?.split('/') ?? '';
-  const urlRoot = urlParts[0];
-  const path = urlParts[1];
-  const secretId = urlParts[2];
-  rateLimit(req).then(() => {
-    if (path === 'api' && req.method === 'POST') {
-      if (secretId && secretId.match(MATCH)) {
-        handleShow(req, res, secretId);
-        return;
+const dataStore = new CosmosDataStore(dbConfig);
+const app = new App(dataStore)
+
+dataStore.connect().then(container => {
+  console.log(`Connected to ${dbConfig.endpoint}${container.id}`);
+  startServer();
+}).catch(e => console.log('dbConnect error:', e));
+
+function startServer() {
+  createServer((req, res) => {
+    const urlParts = req?.url?.split('/') ?? '';
+    const urlRoot = urlParts[0];
+    const path = urlParts[1];
+    const secretId = urlParts[2];
+    rateLimit(req).then(() => {
+      if (path === 'api' && req.method === 'POST') {
+        if (secretId && secretId.match(MATCH)) {
+          handleShow(req, res, secretId);
+          return;
+        }
+        handleCreate(req, res);
+      } else if (urlRoot === '' && req.method === 'GET') {
+        handleHtml(req, res);
       }
-      handleCreate(req, res);
-    } else if (urlRoot === '' && req.method === 'GET') {
-      handleHtml(req, res);
-    }
-  }).catch((e) => {
-    if (e.toString() === RATE_LIMIT.KEY) {
-      res.writeHead(HTTP.TOO_MANY_REQUESTS, CONTENT_TYPE_HTML);
-      res.end(RATE_LIMIT.MESSAGE, 'utf-8');
-    } else {
-      internalError(res);
-    }
+    }).catch(e => {
+      if (e.toString() === RATE_LIMIT.KEY) {
+        res.writeHead(HTTP.TOO_MANY_REQUESTS, CONTENT_TYPE_HTML);
+        res.end(RATE_LIMIT.MESSAGE, 'utf-8');
+      } else {
+        internalError(res);
+      }
+    });
+  }).listen(PORT, HOST, () => {
+    console.log(`Server running at ${HOST}:${PORT}/`);
   });
-}).listen(PORT, HOST, () => {
-  dbConnect()
-    .then(container => setContainer(container))
-    .catch(e => console.log('dbConnect error:', e));
-  console.log(`Server running at ${HOST}:${PORT}/`);
-});
+}
 
 function handleShow(req: IncomingMessage, res: ServerResponse, secretId: string) {
   const matches = secretId?.match(MATCH);
@@ -70,16 +78,24 @@ function handleShow(req: IncomingMessage, res: ServerResponse, secretId: string)
   req.on('data', chunk => body += chunk);
   req.on('end', () => {
     const json = JSON.parse(sanitize(body));
-    getSecret(id, json).then(secret => {
+    app.getSecret(id, json).then(secret => {
       res.writeHead(HTTP.OK, CONTENT_TYPE_JSON);
       res.end(JSON.stringify({
         value: secret.value
       }), 'utf-8');
     }).catch(e => {
-      res.writeHead(HTTP.UNAUTHORIZED, CONTENT_TYPE_JSON);
-      return res.end(JSON.stringify({
-        err: 'authorization required'
-      }), 'utf-8');
+      switch (e) {
+        case Errors.PASSWORD_REQUIRED:
+          res.writeHead(HTTP.UNAUTHORIZED, CONTENT_TYPE_JSON);
+          return res.end(JSON.stringify({
+            err: Errors.PASSWORD_REQUIRED
+          }), 'utf-8');
+        case Errors.NOT_FOUND:
+          res.writeHead(HTTP.OK, CONTENT_TYPE_JSON);
+          return res.end('{}', 'utf-8');
+        default:
+          return badData(res);
+      }
     });
   });
 }
@@ -92,7 +108,7 @@ function handleCreate(req: IncomingMessage, res: ServerResponse) {
     if (json.value.length > MAX_VALUE_LENGTH || (json.password && json.password.length > MAX_PASSWORD_LENGTH)) {
       return badData(res)
     }
-    createSecret(json).then(id => {
+    app.createSecret(json).then(id => {
       res.writeHead(HTTP.OK, CONTENT_TYPE_JSON);
       res.end(JSON.stringify({ id: id }), 'utf-8');
     }).catch(e => {

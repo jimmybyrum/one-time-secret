@@ -1,13 +1,17 @@
-import { getSecret, createSecret, setContainer } from './app';
-import { dbConnect } from './db';
+import { App } from './app';
+import { CosmosDataStore } from './db/cosmos';
+import dbConfig from './dbConfig';
 
 const SECRET_VALUE = 'secret-value';
 const SECRET_PASSWORD = 'secret-password';
 
+const dataStore = new CosmosDataStore(dbConfig);
+const app = new App(dataStore);
+
 beforeAll(async () => {
-  return await dbConnect()
-    .then(container => setContainer(container))
-    .catch(e => console.log('dbConnect error:', e));
+  return dataStore.connect().then(() => {
+    console.log('DataStore connected');
+  }).catch(e => console.log('dbConnect error:', e));
 });
 
 test('can create secret without password', async () => {
@@ -19,7 +23,7 @@ test('can get secret without password', async () => {
   const id = await _createSecret();
   expect(typeof id).toBe('string');
   if (id) {
-    const secret = await getSecret(id, {});
+    const secret = await app.getSecret(id, {});
     expect(secret.value).toEqual(SECRET_VALUE);
   }
 });
@@ -33,7 +37,7 @@ test('should prompt for password', async () => {
   const id = await _createSecret(SECRET_PASSWORD);
   expect(typeof id).toBe('string');
   if (id) {
-    const s = getSecret(id, {});
+    const s = app.getSecret(id, {});
     await expect(s).rejects.toEqual('password-required');
   }
 });
@@ -42,7 +46,7 @@ test('can get secret with password', async () => {
   const id = await _createSecret(SECRET_PASSWORD);
   expect(typeof id).toBe('string');
   if (id) {
-    const secret = await getSecret(id, {
+    const secret = await app.getSecret(id, {
       password: SECRET_PASSWORD
     });
     expect(secret.value).toEqual(SECRET_VALUE);
@@ -50,12 +54,12 @@ test('can get secret with password', async () => {
 });
 
 test('should not find a secret', async () => {
-  const secret = await getSecret('NOTHING_TO_SEE_HERE', {});
+  const secret = await app.getSecret('NOTHING_TO_SEE_HERE', {});
   expect(secret).toEqual({});
 });
 
 async function _createSecret(password?: string) {
-  return await createSecret({
+  return await app.createSecret({
     value: SECRET_VALUE,
     time: 1,
     scale: 'minute',

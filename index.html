@@ -210,7 +210,7 @@ label {
     });
   });
 
-  const AUTH_REQUIRED = 'authorization required';
+  const PASSWORD_REQUIRED = 'password-required';
 
   const secretId = getSecretId();
   if (secretId) {
@@ -290,7 +290,7 @@ label {
         revealedSecretContainer.style.display = 'block';
         revealedSecret.innerText = json.value;
         showSecret.style.display = 'block';
-      } else if (json.err !== AUTH_REQUIRED) {
+      } else if (json.err !== PASSWORD_REQUIRED) {
         showSecretExpired.innerText = '😶 🤐 🤷';
         showSecretExpired.style.display = 'block';
         history.pushState({}, null, '/');
