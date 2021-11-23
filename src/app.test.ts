@@ -1,11 +1,9 @@
 import { App } from './app';
-import { CosmosDataStore } from './db/cosmos';
-import dbConfig from './dbConfig';
+import dataStore from './db'
 
 const SECRET_VALUE = 'secret-value';
 const SECRET_PASSWORD = 'secret-password';
 
-const dataStore = new CosmosDataStore(dbConfig);
 const app = new App(dataStore);
 
 beforeAll(async () => {
@@ -16,6 +14,9 @@ beforeAll(async () => {
 
 test('can create secret without password', async () => {
   const id = await _createSecret();
+  if (id) {
+    await dataStore.removeSecret(id);
+  }
   expect(id).toBeDefined();
 });
 
@@ -24,12 +25,16 @@ test('can get secret without password', async () => {
   expect(typeof id).toBe('string');
   if (id) {
     const secret = await app.getSecret(id, {});
+    await dataStore.removeSecret(id);
     expect(secret.value).toEqual(SECRET_VALUE);
   }
 });
 
 test('can create secret with password', async () => {
   const id = await _createSecret(SECRET_PASSWORD);
+  if (id) {
+    await dataStore.removeSecret(id);
+  }
   expect(id).toBeDefined();
 });
 
@@ -38,6 +43,7 @@ test('should prompt for password', async () => {
   expect(typeof id).toBe('string');
   if (id) {
     const s = app.getSecret(id, {});
+    await dataStore.removeSecret(id);
     await expect(s).rejects.toEqual('password-required');
   }
 });
@@ -49,6 +55,7 @@ test('can get secret with password', async () => {
     const secret = await app.getSecret(id, {
       password: SECRET_PASSWORD
     });
+    await dataStore.removeSecret(id);
     expect(secret.value).toEqual(SECRET_VALUE);
   }
 });

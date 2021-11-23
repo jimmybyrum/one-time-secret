@@ -4,7 +4,7 @@ ENV PORT 3000
 WORKDIR /usr/src/app
 COPY package*.json ./
 RUN npm install --only=prod
-COPY src/dbConfig.ts .
+COPY dbConfig.js .
 COPY . .
 
 EXPOSE 3000

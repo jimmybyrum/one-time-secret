@@ -2,9 +2,8 @@ import { createServer, IncomingMessage, ServerResponse } from 'http';
 import { readFile } from 'fs/promises';
 import { App } from './app';
 import { Errors, RequestByAddressCache, Secret } from './types';
-import { CosmosDataStore } from './db/cosmos';
-import dbConfig from './dbConfig';
 import { env } from 'process';
+import dataStore from './db/index'
 
 const HOST = env.HOST || 'localhost';
 const PORT = parseInt(env?.PORT || '3000', 10);
@@ -31,13 +30,11 @@ enum HTTP {
 
 let requestsByAddress: RequestByAddressCache = {};
 
-const dataStore = new CosmosDataStore(dbConfig);
-const app = new App(dataStore)
+const app = new App(dataStore);
 
-dataStore.connect().then(container => {
-  console.log(`Connected to ${dbConfig.endpoint}${container.id}`);
-  startServer();
-}).catch(e => console.log('dbConnect error:', e));
+dataStore.connect()
+  .then(() => startServer())
+  .catch(e => console.log('dbConnect error:', e));
 
 function startServer() {
   createServer((req, res) => {

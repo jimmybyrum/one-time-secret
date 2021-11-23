@@ -3,7 +3,7 @@
 ## Local setup
 ```bash
 npm install
-cp ./src/dbConfig.template.ts ./src/dbConfig.ts
-# add some valid values to ./src/dbConfig.ts
+cp ./dbConfig.template.js ./dbConfig.js
+# add some valid values to ./dbConfig.js
 npm run start
 ```

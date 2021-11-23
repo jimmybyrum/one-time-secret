@@ -4,7 +4,7 @@ import Memory from 'vault.js';
 import { createHash } from 'crypto';
 
 export class Vault implements DataStore {
-  connect(dbConfig: any): Promise<any> {
+  connect(): Promise<any> {
     return Promise.resolve();
   }
 
@@ -16,7 +16,6 @@ export class Vault implements DataStore {
       value: secret.value,
       password: secret.password
     };
-    console.log(secret);
     Memory.set(id, s, {
       expires: `+${secret.ttl} seconds`,
     });
@@ -24,7 +23,7 @@ export class Vault implements DataStore {
   }
 
   getSecret(id: string, config?: SecretConfig): Promise<Secret> {
-    return Promise.resolve(Memory.get(id));
+    return Promise.resolve(Memory.get(id) || {});
   }
 
   removeSecret(id: string): Promise<void> {

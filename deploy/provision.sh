@@ -2,6 +2,14 @@
 
 set -euo pipefail
 
+if [ -z "${1+x}" ]; then
+  echo ""
+  echo "You need to pass in the env and team. For example:"
+  echo "./provision.sh (test|prod) team-devex"
+  echo ""
+  exit 1
+fi
+
 if [[ ! "$PWD" == */deploy ]]; then
   echo "Please run from deploy folder."
   exit 1

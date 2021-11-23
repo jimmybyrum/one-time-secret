@@ -1,21 +1,19 @@
 import { Container, CosmosClient } from '@azure/cosmos';
 import { DataStore, Secret, SecretConfig } from '../types';
+// @ts-ignore
+import dbConfig from '../../dbConfig.js';
 
 export class CosmosDataStore implements DataStore {
   private _container!: Container;
-  private readonly _dbConfig: any;
-
-  constructor(dbConfig: any) {
-    this._dbConfig = dbConfig;
-  }
 
   async connect(): Promise<any> {
-    const { endpoint, key, databaseId, containerId } = this._dbConfig;
+    const { endpoint, key, databaseId, containerId } = dbConfig;
     const client = new CosmosClient({ endpoint, key });
     const database = client.database(databaseId);
     const container = database.container(containerId);
     await this.dbCreate(client, databaseId, containerId);
     this._container = container;
+    console.log(`Connected to ${endpoint}${container.id}`);
     return container;
   }
 
@@ -38,7 +36,7 @@ export class CosmosDataStore implements DataStore {
   }
 
   private async dbCreate(client: CosmosClient, databaseId: string, containerId: string) {
-    const { partitionKey } = this._dbConfig;
+    const { partitionKey } = dbConfig;
     await client.databases.createIfNotExists({
       id: databaseId
     });
