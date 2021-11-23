@@ -1,15 +1,14 @@
 import { CosmosDataStore } from './cosmos';
-import { Vault } from './vault';
 import { DataStore } from '../types';
+import { Memory } from './memory';
 
-let dataStore: DataStore;
-switch (process.env.DATASTORE) {
-  case 'cosmos':
-    dataStore = new CosmosDataStore();
-    break;
-  default:
-    dataStore = new Vault();
-    break;
+function initDataStore(type: string | undefined): DataStore {
+  switch (type) {
+    case 'cosmos':
+      return new CosmosDataStore();
+    default:
+      return new Memory();
+  }
 }
 
-export default dataStore;
+export default initDataStore;

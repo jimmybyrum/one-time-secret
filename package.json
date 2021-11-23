@@ -5,7 +5,7 @@
   "main": "dist/index",
   "scripts": {
     "start": "tsc && node dist/index",
-    "test": "tsc && jest --detectOpenHandles",
+    "test": "tsc && jest --detectOpenHandles ./src",
     "build": "tsc && docker build . -t one-time-secret",
     "run": "docker run -dp 3000:3000 one-time-secret",
     "deploy": "kubectl apply -f manifest.yml",
@@ -28,7 +28,6 @@
     "@types/node": "^16.11.9",
     "jest": "^27.3.1",
     "ts-jest": "^27.0.7",
-    "typescript": "^4.5.2",
-    "vault.js": "^1.0.3"
+    "typescript": "^4.5.2"
   }
 }

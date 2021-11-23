@@ -3,7 +3,7 @@ import { readFile } from 'fs/promises';
 import { App } from './app';
 import { Errors, RequestByAddressCache, Secret } from './types';
 import { env } from 'process';
-import dataStore from './db/index'
+import initDataStore from './db/index'
 
 const HOST = env.HOST || 'localhost';
 const PORT = parseInt(env?.PORT || '3000', 10);
@@ -30,6 +30,7 @@ enum HTTP {
 
 let requestsByAddress: RequestByAddressCache = {};
 
+const dataStore = initDataStore(env.DATASTORE);
 const app = new App(dataStore);
 
 dataStore.connect()

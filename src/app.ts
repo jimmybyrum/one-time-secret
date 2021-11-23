@@ -2,7 +2,7 @@ import { createHash } from 'crypto';
 import { DataStore, Errors, otsApp, Secret, SecretConfig } from './types'
 
 export class App implements otsApp {
-  private VALID_SCALE = ['day', 'hour', 'minute', 'days', 'hours', 'minutes'];
+  private VALID_SCALE = ['day', 'hour', 'minute', 'second', 'days', 'hours', 'minutes', 'seconds'];
   private _dataStore: DataStore;
 
   constructor(datastore: DataStore) {
@@ -46,6 +46,10 @@ export class App implements otsApp {
     } catch (e) {
       return Promise.reject(e);
     }
+  }
+
+  async removeSecret(id: string) {
+    return this._dataStore.removeSecret(id);
   }
 
   timeScaleToSeconds(time: number, scale: string) {

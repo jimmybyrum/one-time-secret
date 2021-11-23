@@ -4,6 +4,7 @@ export type Secret = {
   time?: number;
   scale?: string;
   ttl?: number;
+  expires?: Date;
   password?: string;
 }
 
@@ -18,13 +19,14 @@ export type RequestByAddressCache = {
 export interface otsApp {
   getSecret(id: string, json: SecretConfig): Promise<Secret>;
   createSecret(json: Secret): Promise<any>;
+  removeSecret(id: string): Promise<any>;
 }
 
 export interface DataStore {
   connect(): Promise<any>;
   getSecret(id: string, config?: SecretConfig): Promise<Secret>;
   createSecret(secret: Secret): Promise<Secret>;
-  removeSecret(id: string): Promise<void>;
+  removeSecret(id: string): Promise<any>;
 }
 
 const enum Errors {
