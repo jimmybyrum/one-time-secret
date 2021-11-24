@@ -6,6 +6,8 @@ type Cache = {
 }
 
 export class Memory implements DataStore {
+  public name: string = 'Memory';
+  public connectionString: string = 'Memory';
   private cache: Cache = {};
 
   async connect(): Promise<any> {

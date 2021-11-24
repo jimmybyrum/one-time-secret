@@ -11,7 +11,7 @@ const app = new App(dataStore);
 describe('tests', () => {
   beforeAll(async () => {
     await dataStore.connect().then(() => {
-      console.log('DataStore connected');
+      console.log(`DataStore connected: ${dataStore.connectionString}`);
     }).catch(e => console.log('dbConnect error:', e));
   });
 

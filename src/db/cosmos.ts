@@ -4,6 +4,8 @@ import { DataStore, Secret, SecretConfig } from '../types';
 import dbConfig from '../../dbConfig.js';
 
 export class CosmosDataStore implements DataStore {
+  public name: string = 'Cosmos';
+  public connectionString: string = '';
   private _container!: Container;
 
   async connect(): Promise<any> {
@@ -13,7 +15,7 @@ export class CosmosDataStore implements DataStore {
     const container = database.container(containerId);
     await this.dbCreate(client, databaseId, containerId);
     this._container = container;
-    console.log(`Connected to ${endpoint}${container.id}`);
+    this.connectionString = `${endpoint}${container.id}`;
     return container;
   }
 
