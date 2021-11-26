@@ -21,6 +21,9 @@ spec:
       - image: one-time-secret
         name: one-time-secret
         imagePullPolicy: Never
+        env:
+          - name: DATASTORE
+            value: cosmos
         resources: {}
         ports:
           - containerPort: 3000
