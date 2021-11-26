@@ -31,9 +31,9 @@ fi
 last_review_tag=$(date '+%Y-%m-%d')
 git_commit=$(git rev-parse --short HEAD)
 
-tags="owner=$owner_team confidentiality="internal" environment=$environment_tag personal-data="no" repo=https://github.com/jimmybyrum/one-time-secret/ last-review=$last_review_tag"
+tags="owner=$owner_team confidentiality="internal" environment=$environment_tag personal-data="no" repo=https://github.com/vippsas/one-time-secret/ last-review=$last_review_tag"
 arm_tags=$(cat <<-END
-{"owner": "team-devex", "confidentiality": "internal", "environment": "$environment_tag", "personal-data": "no", "repo": 'https://github.com/jimmybyrum/one-time-secret/', "last-review": "$last_review_tag"}
+{"owner": "team-devex", "confidentiality": "internal", "environment": "$environment_tag", "personal-data": "no", "repo": 'https://github.com/vippsas/one-time-secret/', "last-review": "$last_review_tag"}
 END
 )
 
