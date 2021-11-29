@@ -39,7 +39,7 @@ variables:
   # APIM section
   apiId: vipps-ots-app-test
   apiBasePath: /vipps-ots
-  apimFilesDirectory: deploy/apim/vipps-ots-app-test
+  apimFilesDirectory: deploy/apim
 
 resources:
   repositories:
