@@ -214,7 +214,7 @@ stages:
                     ENVIRONMENT: "uat"
                     APIM_SERVICE_CONNECTION: "$(armServiceConnectionTEST)"
                     API_ID: "$(apiId)"
-                    APIM_FILES_DIRECTORY: "$(apimFilesDirectory)"
+                    APIM_FILES_DIRECTORY: "$(Pipeline.Workspace)/$(apimFilesDirectory)"
                     API_BASE_PATH: "$(apiBasePath)"
 
   - stage: "DeployApimApiMT"
