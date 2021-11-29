@@ -121,7 +121,7 @@ stages:
                     DEPLOYMENT_TYPE: "$(deploymentType)"
                     DEPLOYMENT_PHASE: "$(deploymentPhase)"
                     IMAGE_NAME: "$(imageName)@$(digest)"
-                    VALUES_PATH: "$(Pipeline.Workspace)/deploy/values.yaml"
+                    VALUES_PATH: "$(Pipeline.Workspace)/values.yaml"
                     BUILD_NAME: "$(Build.BuildNumber)"
                     ACR_AKS_SERVICE_CONNECTION: "$(armServiceConnectionTEST)"
                     GITHUB_SERVICE_CONNECTION: "$(gitServiceConnection)"
