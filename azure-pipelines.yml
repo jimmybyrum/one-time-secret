@@ -25,8 +25,8 @@ parameters:
 
 variables:
   aksNamespace: team-devex
-  armServiceConnectionPROD: vipps-plattorm-VCE-PROD
-  armServiceConnectionTEST: vipps-plattorm-VCE-TEST
+  armServiceConnectionPROD: devex-aks-sc
+  armServiceConnectionTEST: devex-aks-sc
   deploymentPhase: "deploy,monitor,activate"
   deploymentType: "bluegreen"
   gitServiceConnection: github-DevEx
