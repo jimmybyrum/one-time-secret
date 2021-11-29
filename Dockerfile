@@ -1,11 +1,12 @@
-FROM node:slim
+FROM node:14-slim
 
 ENV PORT 3000
 ENV HOST 0.0.0.0
 WORKDIR /usr/src/app
 COPY package*.json ./
-RUN npm install --only=prod
+RUN npm install
 COPY . .
+RUN node_modules/typescript/bin/tsc
 
 EXPOSE 3000
 

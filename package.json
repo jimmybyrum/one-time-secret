@@ -6,7 +6,7 @@
   "scripts": {
     "start": "tsc && node dist/index",
     "test": "tsc && jest --detectOpenHandles ./src",
-    "build": "tsc && docker build . -t one-time-secret",
+    "build": "docker build . -t one-time-secret",
     "run": "docker run -dp 3000:3000 one-time-secret",
     "deploy": "kubectl apply -f manifest.yml",
     "release": "kubectl expose deployment one-time-secret --type=NodePort --port=3000",
