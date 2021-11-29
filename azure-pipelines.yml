@@ -17,7 +17,7 @@ parameters:
   - name: deployToMT
     displayName: Deploy to MT?
     type: boolean
-    default: true
+    default: false
   - name: deployToPROD
     displayName: Deploy to PROD?
     type: boolean
