@@ -6,6 +6,7 @@ WORKDIR /usr/src/app
 COPY package*.json ./
 RUN npm install
 COPY . .
+COPY dbConfig.template.js dbConfig.js
 RUN node_modules/typescript/bin/tsc
 
 EXPOSE 3000
