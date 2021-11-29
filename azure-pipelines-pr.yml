@@ -1,0 +1,54 @@
+# Generated from
+# https://nusse.vippstech.no/start/security-pipeline?name=vipps-ots-app-test&gitsc=github-DevEx&semgrep=%7B%22additionalArgs%22%3A%22%22%2C%22codeScanningRuleSet%22%3A%22rules%2Ftypescript%22%2C%22debugMode%22%3Afalse%2C%22exclude%22%3A%22--exclude%20vipps-semgrep%2F%20--exclude%3D%5C%22*%2Ftest%2F*%5C%22%20--exclude%3D%5C%22*%2Ftests%2F*%5C%22%22%2C%22outputPath%22%3A%22%22%2C%22pathToScan%22%3A%22%2Fsrc%22%2C%22secretsScanningRuleSet%22%3A%22rules%2Fvipps%2Fgeneric%2Fsecrets%22%2C%22semgrepDirectory%22%3A%22%24(Build.SourcesDirectory)%2Fvipps-semgrep%22%2C%22warnOnError%22%3Atrue%7D
+# You can allways visit this link to download this pipeline.
+
+pr:
+  branches:
+    include:
+      - '*'
+  paths:
+    include:
+      - src/*
+    exclude:
+      - README.md
+      - docs/*
+      - deploy/*
+
+variables:
+  gitHubServiceConnection: github-DevEx
+  imageAndTag: '$(imageName):$(Build.BuildNumber)'
+  imageName: vipps/vipps-ots-app-test
+  registry: acrvippsakscmn.azurecr.io
+  vmImage: ubuntu-20.04
+
+resources:
+  repositories:
+    - repository: vipps-semgrep
+      type: git
+      name: Test/vipps-semgrep
+      ref: refs/heads/stable
+
+stages:
+  - stage: "SecurityScan"
+    displayName: "Security scan"
+    jobs:
+    - job: SecurityScanWithSemgrep
+      displayName: "Semgrep"
+      condition: eq(variables['build.Reason'], 'PullRequest')
+      pool:
+        vmImage: $(vmImage)
+      steps:
+        - checkout: self
+        - checkout: vipps-semgrep
+        - template: template-semgrep.yml@vipps-semgrep
+          parameters:
+            additionalArgs: ''
+            codeScanningRuleSet: 'rules/typescript'
+            debugMode: 'false'
+            exclude: '--exclude vipps-semgrep/ --exclude="*/test/*" --exclude="*/tests/*"'
+            outputPath: ''
+            pathToScan: '/src'
+            secretsScanningRuleSet: 'rules/vipps/generic/secrets'
+            semgrepDirectory: '$(Build.SourcesDirectory)/vipps-semgrep'
+            warnOnError: 'true'
+      

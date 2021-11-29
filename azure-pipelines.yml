@@ -1,0 +1,259 @@
+# Generated from
+# https://nusse.vippstech.no/start/build-and-release?identity=vipps-ots-app-test&namespace=team-devex&name=vipps-ots-app-test&gitsc=github-DevEx&apiid=vipps-ots-app-test&apipath=%2Fvipps-ots
+# You can always visit this link to download this pipeline.
+
+trigger:
+  - main
+  - master
+  - release/*
+
+pr: none
+
+parameters:
+  - name: deployToUAT
+    displayName: Deploy to UAT?
+    type: boolean
+    default: true
+  - name: deployToMT
+    displayName: Deploy to MT?
+    type: boolean
+    default: true
+  - name: deployToPROD
+    displayName: Deploy to PROD?
+    type: boolean
+    default: false
+
+variables:
+  aksNamespace: team-devex
+  armServiceConnectionPROD: vipps-plattorm-VCE-PROD
+  armServiceConnectionTEST: vipps-plattorm-VCE-TEST
+  deploymentPhase: "deploy,monitor,activate"
+  deploymentType: "bluegreen"
+  gitServiceConnection: github-DevEx
+  identityBinding: vipps-ots-app-test
+  imageAndTag: '$(imageName):$(Build.BuildNumber)'
+  imageName: vipps/vipps-ots-app-test
+  mainbranch: "refs/heads/main"
+  registry: acrvippsakscmn.azurecr.io
+  vmImage: $(vmImage)
+  # APIM section
+  apiId: vipps-ots-app-test
+  apiBasePath: /vipps-ots
+  apimFilesDirectory: deploy/apim/vipps-ots-app-test
+
+resources:
+  repositories:
+    - repository: kubedeploy
+      type: git
+      name: DevEx/kubedeploy
+      ref: refs/heads/main
+
+stages:
+  - stage: "PushToACR"
+    displayName: "Push docker image to ACR"
+    jobs:
+      - job: BuildAndPush
+        displayName: "Build and push Docker Image to ACR"
+        pool:
+          vmImage: $(vmImage)
+        steps:
+          - task: AzureCLI@2
+            name: dockerPush
+            displayName: "Docker build and push"
+            inputs:
+              azureSubscription: $(armServiceConnectionPROD)
+              scriptType: "bash"
+              scriptLocation: "inlineScript"
+              inlineScript: |
+                set -eo pipefail
+                az acr login -n acrvippsakscmn
+                docker build -t $(registry)/$(imageName):$(Build.BuildNumber) .
+                pushOutput=$(docker push $(registry)/$(imageAndTag))
+                digest=$(echo $pushOutput | grep -o sha256:[0-9a-zA-Z]*)
+                echo "Digest of docker push $(registry)/$(imageAndTag): $digest"
+                echo "##vso[task.setvariable variable=digest;isOutput=true]$digest"
+
+          - task: CopyFiles@2
+            displayName: 'Copy values.yaml staging directory'
+            inputs:
+              contents: |
+                $(Build.SourcesDirectory)/deploy/values.yaml
+              targetFolder: $(Build.ArtifactStagingDirectory)
+
+          - task: PublishBuildArtifacts@1
+            displayName: "Publish deploy / values.yaml"
+            inputs:
+              pathtoPublish: $(Build.ArtifactStagingDirectory)
+              ArtifactName: 'deploy'
+              publishLocation: 'Container'
+
+          - task: PublishBuildArtifacts@1
+            displayName: "Publish APIM policy"
+            inputs:
+              pathtoPublish: deploy/apim/vipps-ots-app-test
+              ArtifactName: $(apimFilesDirectory)
+              publishLocation: 'Container'
+
+  - stage: "DeployUAT"
+    displayName: "Deploy deploy to UAT"
+    dependsOn: ["PushToACR"]
+    condition: and(succeeded(), eq(${{ parameters.deployToUAT }}, true))
+    jobs:
+      - deployment: Deploy
+        displayName: "Deploy to UAT AKS with Kubedeploy"
+        pool:
+          vmImage: $(vmImage)
+        environment: 'uat'
+        variables:
+          digest:  $[ stageDependencies.PushToACR.BuildAndPush.outputs['dockerPush.digest'] ]
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - bash: |
+                    echo "Digest of docker push from previous job: $(digest)"
+                  displayName: 'Print digest'
+                - template: template/kubedeploy-template-v2.yml@kubedeploy
+                  parameters:
+                    ENVIRONMENT: "uat"
+                    NAMESPACE: "$(aksNamespace)"
+                    IDENTITY_BINDING: "$(identityBinding)"
+                    DEPLOYMENT_TYPE: "$(deploymentType)"
+                    DEPLOYMENT_PHASE: "$(deploymentPhase)"
+                    IMAGE_NAME: "$(imageName)@$(digest)"
+                    VALUES_PATH: "$(Pipeline.Workspace)/deploy/values.yaml"
+                    BUILD_NAME: "$(Build.BuildNumber)"
+                    ACR_AKS_SERVICE_CONNECTION: "$(armServiceConnectionTEST)"
+                    GITHUB_SERVICE_CONNECTION: "$(gitServiceConnection)"
+                    POLICY: security_context.allow=true
+
+  - stage: "DeployMT"
+    displayName: "Deploy deploy to MT"
+    dependsOn: ["PushToACR", "DeployUAT"]
+    jobs:
+      - deployment: Deploy
+        displayName: "Deploy to MT AKS with Kubedeploy"
+        pool:
+          vmImage: $(vmImage)
+        environment: 'mt'
+        variables:
+          digest:  $[ stageDependencies.PushToACR.BuildAndPush.outputs['dockerPush.digest'] ]
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - bash: |
+                    echo "Digest of docker push from previous job: $(digest)"
+                  displayName: 'Print digest'
+                - template: template/kubedeploy-template-v2.yml@kubedeploy
+                  parameters:
+                    ENVIRONMENT: "mt"
+                    NAMESPACE: "$(aksNamespace)"
+                    IDENTITY_BINDING: "$(identityBinding)"
+                    DEPLOYMENT_TYPE: "$(deploymentType)"
+                    DEPLOYMENT_PHASE: "$(deploymentPhase)"
+                    IMAGE_NAME: "$(imageName)@$(digest)"
+                    VALUES_PATH: "$(Pipeline.Workspace)/deploy/values.yaml"
+                    BUILD_NAME: "$(Build.BuildNumber)"
+                    ACR_AKS_SERVICE_CONNECTION: "$(armServiceConnectionTEST)"
+                    GITHUB_SERVICE_CONNECTION: "$(gitServiceConnection)"
+                    POLICY: security_context.allow=true
+
+  - stage: "DeployPROD"
+    displayName: "Deploy deploy to Prod"
+    dependsOn: ["PushToACR", "DeployMT"]
+    condition: and(and(succeeded(), eq(variables['Build.SourceBranch'], variables['mainBranch'])), eq(${{ parameters.deployToPROD }}, true))
+    jobs:
+      - deployment: Deploy
+        displayName: "Deploy to Prod AKS with Kubedeploy"
+        pool:
+          vmImage: $(vmImage)
+        environment: 'prod'
+        variables:
+          digest:  $[ stageDependencies.PushToACR.BuildAndPush.outputs['dockerPush.digest'] ]
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - bash: |
+                    echo "Digest of docker push from previous job: $(digest)"
+                  displayName: 'Print digest'
+                - template: template/kubedeploy-template-v2.yml@kubedeploy
+                  parameters:
+                    ENVIRONMENT: "prod"
+                    NAMESPACE: "$(aksNamespace)"
+                    IDENTITY_BINDING: "$(identityBinding)"
+                    DEPLOYMENT_TYPE: "$(deploymentType)"
+                    DEPLOYMENT_PHASE: "$(deploymentPhase)"
+                    IMAGE_NAME: "$(imageName)@$(digest)"
+                    VALUES_PATH: "$(Pipeline.Workspace)/deploy/values.yaml"
+                    BUILD_NAME: "$(Build.BuildNumber)"
+                    ACR_AKS_SERVICE_CONNECTION: "$(armServiceConnectionPROD)"
+                    GITHUB_SERVICE_CONNECTION: "$(gitServiceConnection)"
+                    POLICY: security_context.allow=true
+
+  - stage: "DeployApimApiUAT"
+    displayName: "Deploy deploy APIM policy to UAT"
+    dependsOn: ["PushToACR"]
+    condition: and(and(succeeded(), eq(variables['Build.SourceBranch'], variables['mainBranch'])), eq(${{ parameters.deployToUAT }}, true))
+    jobs:
+      - deployment: Deploy
+        displayName: "Deploy deploy APIM policy to UAT"
+        pool:
+          vmImage: $(vmImage)
+        environment: 'uat'
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - template: template/apim-api-template.yml@kubedeploy
+                  parameters:
+                    ENVIRONMENT: "uat"
+                    APIM_SERVICE_CONNECTION: "$(armServiceConnectionTEST)"
+                    API_ID: "$(apiId)"
+                    APIM_FILES_DIRECTORY: "$(apimFilesDirectory)"
+                    API_BASE_PATH: "$(apiBasePath)"
+
+  - stage: "DeployApimApiMT"
+    displayName: "Deploy deploy APIM policy to MT"
+    dependsOn: ["PushToACR", "DeployApimApiUAT"]
+    condition: and(and(succeeded(), eq(variables['Build.SourceBranch'], variables['mainBranch'])), eq(${{ parameters.deployToMT }}, true))
+    jobs:
+      - deployment: Deploy
+        displayName: "Deploy deploy APIM policy to MT"
+        pool:
+          vmImage: $(vmImage)
+        environment: 'mt'
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - template: template/apim-api-template.yml@kubedeploy
+                  parameters:
+                    ENVIRONMENT: "mt"
+                    APIM_SERVICE_CONNECTION: "$(armServiceConnectionTEST)"
+                    API_ID: "$(apiId)"
+                    APIM_FILES_DIRECTORY: "$(apimFilesDirectory)"
+                    API_BASE_PATH: "$(apiBasePath)"
+
+  - stage: "DeployApimApiPROD"
+    displayName: "Deploy deploy APIM policy to PROD"
+    dependsOn: ["PushToACR", "DeployApimApiMT"]
+    condition: and(and(succeeded(), eq(variables['Build.SourceBranch'], variables['mainBranch'])), eq(${{ parameters.deployToPROD }}, true))
+    jobs:
+      - deployment: Deploy
+        displayName: "Deploy deploy APIM policy to PROD"
+        pool:
+          vmImage: $(vmImage)
+        environment: 'prod'
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - template: template/apim-api-template.yml@kubedeploy
+                  parameters:
+                    ENVIRONMENT: "prod"
+                    APIM_SERVICE_CONNECTION: "$(armServiceConnectionPROD)"
+                    API_ID: "$(apiId)"
+                    APIM_FILES_DIRECTORY: "$(apimFilesDirectory)"
+                    API_BASE_PATH: "$(apiBasePath)"
