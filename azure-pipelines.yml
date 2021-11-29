@@ -83,7 +83,7 @@ stages:
           - task: PublishBuildArtifacts@1
             displayName: "Publish deploy / values.yaml"
             inputs:
-              pathtoPublish: $(Build.ArtifactStagingDirectory)
+              pathtoPublish: $(Build.ArtifactStagingDirectory)/deploy
               ArtifactName: 'deploy'
               publishLocation: 'Container'
 
