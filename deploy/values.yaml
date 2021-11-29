@@ -19,7 +19,7 @@ livenessProbe:
 linkerd:
   enabled: true
 owner: team-devex
-entrypoint: /usr/src/app
+entrypoint: /
 prometheus:
   path: /metrics
   portName: http-prom
