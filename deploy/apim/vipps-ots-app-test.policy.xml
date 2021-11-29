@@ -1,7 +1,7 @@
 <policies>
     <inbound>
         <base />
-        <set-backend-service base-url='@(context.Variables.GetValueOrDefault("aksBackendUrl", "{{AKSBackendUrl}}") + "//")' />
+        <set-backend-service base-url='@(context.Variables.GetValueOrDefault("aksBackendUrl", "{{AKSBackendUrl}}") + "/vipps-ots/")' />
     </inbound>
     <backend>
         <base />
@@ -13,4 +13,3 @@
         <base />
     </on-error>
 </policies>
-      
