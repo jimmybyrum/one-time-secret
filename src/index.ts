@@ -47,6 +47,11 @@ function startServer() {
     const path = urlParts[1];
     const secretId = urlParts[2];
     rateLimit(req).then(() => {
+      if (path === 'health' || path === 'ready') {
+        res.writeHead(HTTP.OK, CONTENT_TYPE_JSON);
+        res.end(JSON.stringify({ [path]: true }), 'utf-8');
+        return;
+      }
       if (path === 'api' && req.method === 'POST') {
         if (secretId && secretId.match(MATCH)) {
           handleShow(req, res, secretId);
