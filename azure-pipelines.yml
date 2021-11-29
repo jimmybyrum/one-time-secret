@@ -9,6 +9,9 @@ trigger:
 
 pr: none
 
+# Note! The name is the BuildNumber below. This is just the way AzureDevops decided to name things.
+name: $(Build.SourceBranchName)-$(Date:yyyyMMdd)-$(Build.BuildId)
+
 parameters:
   - name: deployToUAT
     displayName: Deploy to UAT?
