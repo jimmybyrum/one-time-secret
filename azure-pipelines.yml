@@ -90,7 +90,7 @@ stages:
           - task: PublishBuildArtifacts@1
             displayName: "Publish APIM policy"
             inputs:
-              pathtoPublish: deploy/apim/vipps-ots-app-test
+              pathtoPublish: deploy/apim
               ArtifactName: $(apimFilesDirectory)
               publishLocation: 'Container'
 
