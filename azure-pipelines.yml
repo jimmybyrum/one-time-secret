@@ -9,8 +9,6 @@ trigger:
 
 pr: none
 
-vmImage: 'ubuntu-latest'
-
 parameters:
   - name: deployToUAT
     displayName: Deploy to UAT?
@@ -37,7 +35,7 @@ variables:
   imageName: vipps/vipps-ots-app-test
   mainbranch: "refs/heads/main"
   registry: acrvippsakscmn.azurecr.io
-  vmImage: $(vmImage)
+  vmImage: 'ubuntu-latest'
   # APIM section
   apiId: vipps-ots-app-test
   apiBasePath: /vipps-ots
