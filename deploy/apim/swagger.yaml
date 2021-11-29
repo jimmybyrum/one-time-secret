@@ -2,8 +2,8 @@ swagger: "2.0"
 info:
   description: "Vipps One Time Secret"
   version: "1.0.0"
-  title: "Canary"
-basePath: "/canary"
+  title: "One Time Secret"
+basePath: "/vipps-ots"
 tags:
   - name: "main"
     description: "Main service"
@@ -117,4 +117,3 @@ definitions:
       ready:
         type: boolean
         description: "True if service is currently ready to serve requests, false if it is not"
-
