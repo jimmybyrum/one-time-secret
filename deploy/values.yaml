@@ -28,6 +28,8 @@ readinessProbe:
   path: /ready
   port: 3000
 
+containerPort: 3000
+
 resourcesLimitsCpu: .5
 resourcesLimitsMemory: 75M
 resourcesRequestsCpu: .1
