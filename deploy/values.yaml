@@ -12,7 +12,7 @@ securityContext:
   runAsUser: 1000
 ingress:
   enabled: true
-  path: /
+  path: /vipps-ots
 livenessProbe:
   path: /health
   port: 3000
