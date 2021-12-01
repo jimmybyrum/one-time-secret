@@ -1,6 +1,5 @@
 <policies>
     <inbound>
-        <base />
         <set-backend-service base-url='@(context.Variables.GetValueOrDefault("aksBackendUrl", "{{AKSBackendUrl}}") + "/vipps-ots")' />
     </inbound>
     <backend>
