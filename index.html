@@ -186,6 +186,8 @@ label {
 
 <script>
 (function() {
+  const baseUrl = `${location.origin}${location.pathname}`.replace(/\/$/, '');
+
   const ots = document.getElementById('ots');
   ots.addEventListener('submit', onSubmit);
 
@@ -232,7 +234,7 @@ label {
   }
 
   function createSecret(value, time, scale, password) {
-    const req = new Request('api', {
+    const req = new Request(`${baseUrl}/api`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -244,13 +246,10 @@ label {
         password: password
       })
     });
-    console.log("Request:", req)
     fetch(req).then(response => {
-      console.log("Fetch response: ", response)
       return response.json()
     }).then(json => {
-      const url = document.location.protocol + '//' + document.location.host + '?s=' + json.id;
-      secretLink.innerHTML = url;
+      secretLink.innerHTML = `${baseUrl}?s=${json.id}`;
       shareSecret.style.display = 'block';
       ots.secret.value = '';
     });
@@ -272,7 +271,7 @@ label {
   }
 
   function getSecret(id, password) {
-    const req = new Request('api/' + id, {
+    const req = new Request(`${baseUrl}/api/${id}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -295,7 +294,7 @@ label {
       } else if (json.err !== PASSWORD_REQUIRED) {
         showSecretExpired.innerText = '😶 🤐 🤷';
         showSecretExpired.style.display = 'block';
-        history.pushState({}, null, '/');
+        history.pushState({}, null, baseUrl);
         setTimeout(() => {
           showSecretExpired.style.display = 'none';
         }, 3000);

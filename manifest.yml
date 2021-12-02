@@ -24,6 +24,8 @@ spec:
         env:
           - name: DATASTORE
             value: cosmos
+          - name: BASE_PATH
+            value: vipps-ots
         resources: {}
         ports:
           - containerPort: 3000
