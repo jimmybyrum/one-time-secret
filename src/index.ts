@@ -1,4 +1,5 @@
 import { createServer, IncomingMessage, ServerResponse } from 'http';
+import { parse, Url } from 'url'
 import { readFile } from 'fs/promises';
 import { App } from './app';
 import { Errors, RequestByAddressCache, Secret } from './types';
@@ -46,6 +47,13 @@ function startServer() {
     const urlRoot = urlParts[0];
     const path = urlParts[1];
     const secretId = urlParts[2];
+
+    // const urlParts = parse(req.url ?? '')
+    // const path = urlParts.path
+    // const secretId = urlParts.query
+
+    console.log(urlParts)
+    console.log("Transformed path: ", path)
     rateLimit(req).then(() => {
       if (path === 'health' || path === 'ready') {
         res.writeHead(HTTP.OK, CONTENT_TYPE_JSON);
