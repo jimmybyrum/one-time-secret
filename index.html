@@ -232,7 +232,7 @@ label {
   }
 
   function createSecret(value, time, scale, password) {
-    const req = new Request('/api', {
+    const req = new Request('api', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
