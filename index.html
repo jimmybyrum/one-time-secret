@@ -147,7 +147,7 @@ label {
 <body>
 
 <div id="show-secret">
-  The secret: 
+  The secret:
   <form id="sp">
     <input type="password" name="password" placeholder="Enter secret password and press return" />
     <input type="submit" />
@@ -200,7 +200,7 @@ label {
   const expiresInScale = document.querySelector('#expires-in select');
   expiresInTime.addEventListener('change', onTimeChange);
   expiresInTime.addEventListener('keyup', onTimeChange);
-  
+
   const shareSecret = document.getElementById('share-secret');
   const secretLink = document.getElementById('share-secret-link');
   const copyLinks = document.querySelectorAll('.copy-text');
@@ -232,7 +232,7 @@ label {
   }
 
   function createSecret(value, time, scale, password) {
-    const req = new Request('/api', {
+    const req = new Request('vipps-ots/api', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -244,10 +244,12 @@ label {
         password: password
       })
     });
+    console.log("Request:", req)
     fetch(req).then(response => {
+      console.log("Fetch response: ", response)
       return response.json()
     }).then(json => {
-      const url = document.location.protocol + '//' + document.location.host + '?s=' + json.id;
+      const url = document.location.protocol + '//' + document.location.host + 'vipps-ots?s=' + json.id;
       secretLink.innerHTML = url;
       shareSecret.style.display = 'block';
       ots.secret.value = '';
@@ -270,7 +272,7 @@ label {
   }
 
   function getSecret(id, password) {
-    const req = new Request('/api/' + id, {
+    const req = new Request('vipps-ots/api/' + id, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
