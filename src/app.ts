@@ -3,6 +3,7 @@ import { DataStore, Errors, otsApp, Secret, SecretConfig } from './types'
 
 export class App implements otsApp {
   private VALID_SCALE = ['day', 'hour', 'minute', 'second', 'days', 'hours', 'minutes', 'seconds'];
+  private MAX_TTL = 60 * 60 * 24 * 7 // 7 days
   private _dataStore: DataStore;
 
   constructor(datastore: DataStore) {
@@ -32,10 +33,14 @@ export class App implements otsApp {
     }
     const salt = new Date().valueOf();
     const id = createHash('md5').update(json.value + salt).digest('hex');
+    const ttl = this.timeScaleToSeconds(json.time, json.scale);
+    if (ttl > this.MAX_TTL) {
+      return Promise.reject(Errors.BAD_DATA);
+    }
     let secret: Secret = {
       id: id,
       value: json.value,
-      ttl: this.timeScaleToSeconds(json.time, json.scale)
+      ttl: ttl
     };
     if (json.password) {
       secret.password = json.password;
