@@ -146,7 +146,7 @@ function internalError(res: ServerResponse) {
 }
 
 function sanitize(str: string) {
-  return str.replace(/javascript:/gi, '').replace(/\^\w-_. ]/gi, c => {
+  return str.replace(/javascript:/gi, '').replace(/\^\w-_. \/;'"]/gi, c => {
     return `&#${c.charCodeAt(0)};`;
   });
 }
