@@ -4,7 +4,7 @@
   "description": "one time secret",
   "main": "dist/index",
   "scripts": {
-    "start": "tsc && node dist/index",
+    "start": "tsc && BASE_PATH=vipps-ots node dist/index",
     "test": "tsc && jest --detectOpenHandles ./src",
     "build": "docker build . -t one-time-secret",
     "run": "docker run -dp 3000:3000 one-time-secret",
