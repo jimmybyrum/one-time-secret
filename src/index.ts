@@ -1,5 +1,4 @@
 import { createServer, IncomingMessage, ServerResponse } from 'http';
-import { parse } from 'url'
 import { readFile } from 'fs/promises';
 import { App } from './app';
 import { Errors, RequestByAddressCache, Secret } from './types';
@@ -44,8 +43,7 @@ dataStore.connect()
 
 function startServer() {
   createServer((req, res) => {
-    const parsedUrl = parse(req.url ?? '');
-    const pathname = parsedUrl.pathname;
+    const pathname = req.url!.split('?')[0];
     let urlParts = pathname!.substring(1).split('/');
     if (urlParts[0] === BASE_PATH) {
       urlParts.shift();
