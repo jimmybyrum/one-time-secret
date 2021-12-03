@@ -152,7 +152,10 @@ function sanitize(str: string) {
 }
 
 function rateLimit(req: IncomingMessage) {
-  const address: string | string[] = (req.headers['x-forwarded-for'] ?? req.socket.remoteAddress ?? 'unknown').toString();
+  if (!req.socket.remoteAddress) {
+    return Promise.reject(RATE_LIMIT.KEY);
+  }
+  const address: string = req.socket.remoteAddress.toString();
   if (!requestsByAddress[address]) {
     requestsByAddress[address] = 0
   }
