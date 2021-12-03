@@ -1,9 +1,10 @@
-import { createHash } from 'crypto';
+import { createCipheriv, createDecipheriv, createHash, randomBytes, scryptSync } from 'crypto';
 import { DataStore, Errors, otsApp, Secret, SecretConfig } from './types'
 
 export class App implements otsApp {
   private VALID_SCALE = ['day', 'hour', 'minute', 'second', 'days', 'hours', 'minutes', 'seconds'];
   private MAX_TTL = 60 * 60 * 24 * 7 // 7 days
+  private ALGO = 'aes-192-cbc';
   private _dataStore: DataStore;
 
   constructor(datastore: DataStore) {
@@ -15,8 +16,14 @@ export class App implements otsApp {
     if (!secret) {
       return Promise.reject(Errors.NOT_FOUND);
     }
-    if (secret.password && secret.password !== json.password) {
-      return Promise.reject(Errors.PASSWORD_REQUIRED);
+    if (secret.password) {
+      if (secret.password !== json.password) {
+        return Promise.reject(Errors.PASSWORD_REQUIRED);
+      }
+      const [encrypted, iv] = secret.value.split('|');
+      const key = scryptSync(secret.password, 'salt', 24);
+      const decipher = createDecipheriv(this.ALGO, key, Buffer.from(iv, 'hex'));
+      secret.value = decipher.update(encrypted, 'hex', 'utf8') + decipher.final('utf8');
     }
     if (secret?.id) {
       await this._dataStore.removeSecret(id);
@@ -44,6 +51,13 @@ export class App implements otsApp {
     };
     if (json.password) {
       secret.password = json.password;
+      const iv = randomBytes(16);
+      const key = scryptSync(secret.password, 'salt', 24);
+      const cipher = createCipheriv(this.ALGO, key, iv);
+      secret.value = [
+        cipher.update(secret.value, 'utf8', 'hex') + cipher.final('hex'),
+        Buffer.from(iv).toString('hex')
+      ].join('|');
     }
     try {
       const createdSecret = await this._dataStore.createSecret(secret);
