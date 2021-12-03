@@ -10,14 +10,20 @@
   --background-color: #fff;
   --text-color: #000;
   --accent-color: #ff5b24;
+  --accent-color-muted: #aaa;
+  --accent-color-active: #999;
   --accent-background-color: #efefef;
   --link-color: #bfbfff;
+
+  --input-padding: 5px;
 }
 @media (prefers-color-scheme: dark) {
   :root {
     --background-color: #333;
     --text-color: #efefef;
     --accent-color: #ff5b24;
+    --accent-color-muted: #999;
+    --accent-color-active: #aaa;
     --accent-background-color: #444;
   }
 }
@@ -42,6 +48,20 @@ html {
 }
 *, *:before, *:after {
   box-sizing: inherit;
+}
+textarea,
+input[type="number"],
+input[type="password"],
+select {
+  outline: none;
+  padding: var(--input-padding);
+  border: 1px solid var(--accent-color-muted);
+}
+textarea:active,
+input[type="number"]:active,
+input[type="password"]:active,
+select:active {
+  border-color: var(--accent-color-active);
 }
 textarea,
 input[type="submit"],
@@ -70,6 +90,7 @@ fieldset > * {
   margin-bottom: 1rem;
 }
 input[type="submit"] {
+  padding: var(--input-padding);
   background-color: var(--accent-color);
   border-color: var(--accent-color);
   color: white;
