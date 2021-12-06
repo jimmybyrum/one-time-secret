@@ -7,9 +7,9 @@ app:
 
 metadata:
   labels:
-    aadpodidbinding: vipps-ots-app
+    aadpodidbinding: vipps-ots
 
-aadpodidbinding: vipps-ots-app
+aadpodidbinding: vipps-ots
 
 containerPorts:
   - name: application
