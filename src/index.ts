@@ -31,7 +31,7 @@ enum HTTP {
 
 let requestsByAddress: RequestByAddressCache = {};
 
-const dataStore = initDataStore("not-cosmos");
+const dataStore = initDataStore(env.DATASTORE);
 const app = new App(dataStore);
 
 dataStore.connect()
@@ -43,6 +43,7 @@ dataStore.connect()
   .catch(e => console.log('dbConnect error:', e));
 
 function startServer() {
+  console.log("Starting server...")
   createServer((req, res) => {
     const pathname = req.url!.split('?')[0];
     let urlParts = pathname!.substring(1).split('/');

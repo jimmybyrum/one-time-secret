@@ -50,5 +50,5 @@ END
 
 az deployment group create -g $rg --template-file ots.bicep --mode Incremental --parameters "$parameters" --name $name
 
-az ad sp list --display-name $managed_identity --query [].objectId -o tsv
+UserObjectId=$(az ad sp list --display-name $managed_identity --query [].objectId -o tsv)
 az cosmosdb sql role assignment create --account-name cosmos-ots-test --resource-group rg-ots-test --role-assignment-id cb8ed2d7-2371-4e3c-bd31-6cc1560e84f8 --role-definition-name "Cosmos DB Built-in Data Reader" --scope "/" --principal-id $UserObjectId
