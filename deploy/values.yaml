@@ -4,6 +4,13 @@
 
 app:
   name: vipps-ots-app-test
+
+metadata:
+  labels:
+    aadpodidbinding: vipps-ots-app
+
+aadpodidbinding: vipps-ots-app
+
 containerPorts:
   - name: application
     containerPort: 3000
@@ -51,9 +58,3 @@ resourcesRequestsMemory: 35Mi
 
 service:
   port: 80
-
-spec:
-  template:
-    metadata:
-      labels:
-        aadpodidbinding: vipps-ots-app
