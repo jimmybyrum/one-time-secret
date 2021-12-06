@@ -10,7 +10,7 @@ export class CosmosDataStore implements DataStore {
 
   async connect(): Promise<any> {
     const { endpoint, databaseId, containerId } = dbConfig;
-    console.log("Will create a cosmosClient")
+    console.log("Will create a cosmosClient using the following config values: endpoint: ", endpoint, " - databaseId: ", databaseId, " - containerId: ", containerId )
     const credential = new ChainedTokenCredential(
         new AzureCliCredential(),
         new VisualStudioCodeCredential(),
