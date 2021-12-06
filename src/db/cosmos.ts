@@ -12,9 +12,9 @@ export class CosmosDataStore implements DataStore {
     const { endpoint, databaseId, containerId } = dbConfig;
     console.log("Will create a cosmosClient using the following config values: endpoint: ", endpoint, " - databaseId: ", databaseId, " - containerId: ", containerId )
     const credential = new ChainedTokenCredential(
+        new ManagedIdentityCredential(),
         new AzureCliCredential(),
-        new VisualStudioCodeCredential(),
-        new ManagedIdentityCredential()
+        new VisualStudioCodeCredential()
     );
 
     const client = new CosmosClient({
