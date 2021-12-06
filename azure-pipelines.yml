@@ -33,7 +33,7 @@ variables:
   deploymentPhase: "deploy,monitor,activate"
   deploymentType: "bluegreen"
   gitServiceConnection: github-DevEx
-  identityBinding: vipps-ots-app-test
+  identityBinding: vipps-ots
   imageAndTag: '$(imageName):$(Build.BuildNumber)'
   imageName: vipps/vipps-ots-app-test
   mainbranch: "refs/heads/main"
