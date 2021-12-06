@@ -31,7 +31,7 @@ enum HTTP {
 
 let requestsByAddress: RequestByAddressCache = {};
 
-const dataStore = initDataStore(env.DATASTORE);
+const dataStore = initDataStore("not-cosmos");
 const app = new App(dataStore);
 
 dataStore.connect()
