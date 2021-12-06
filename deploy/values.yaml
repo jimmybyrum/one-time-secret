@@ -16,7 +16,7 @@ ingress:
 livenessProbe:
   path: /health
   port: 3000
-  initialDelaySeconds: 90
+  initialDelaySeconds: 180
 linkerd:
   enabled: false
 owner: team-devex
@@ -28,7 +28,7 @@ replicas: 1
 readinessProbe:
   path: /ready
   port: 3000
-  initialDelaySeconds: 90
+  initialDelaySeconds: 180
 
 containerPort: 3000
 

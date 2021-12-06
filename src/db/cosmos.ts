@@ -15,7 +15,7 @@ export class CosmosDataStore implements DataStore {
 
   async connect(): Promise<any> {
     console.log("Will wait a little to ensure that MSI will be available")
-    for (let index = 0; index < 30; index++) {
+    for (let index = 0; index < 180; index++) {
         const ms = 1000
         await delay (ms)
         console.log("I have waited ", (ms*index)/1000, " seconds.", "-- AZURE_CLIENT_ID: ", env.AZURE_CLIENT_ID)
