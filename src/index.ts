@@ -36,7 +36,7 @@ const app = new App(dataStore);
 
 dataStore.connect()
   .then(() => {
-    console.log(`DataStore connected: ${dataStore.connectionString}`);
+    console.log(`DataStore connected: ${dataStore.name}`);
     startServer();
   })
   .catch(e => console.log('dbConnect error:', e));
