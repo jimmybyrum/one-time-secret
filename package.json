@@ -21,7 +21,8 @@
   "license": "MIT",
   "dependencies": {
     "@azure/cosmos": "^3.14.1",
-    "@azure/identity": "^2.0.1"
+    "@azure/identity": "^2.0.1",
+    "@azure/keyvault-secrets": "^4.3.0"
   },
   "devDependencies": {
     "@babel/preset-typescript": "^7.16.0",
