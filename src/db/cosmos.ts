@@ -1,14 +1,26 @@
 import { Container, CosmosClient } from '@azure/cosmos';
 import { DataStore, Secret, SecretConfig } from '../types';
-import { DefaultAzureCredential } from "@azure/identity"
+import { DefaultAzureCredential } from "@azure/identity";
+import { env } from 'process';
 // @ts-ignore
 import dbConfig from '../../dbConfig.js';
+
+function delay(ms: number) {
+    return new Promise( resolve => setTimeout(resolve, ms) );
+}
 
 export class CosmosDataStore implements DataStore {
   public name: string = 'Cosmos';
   private _container!: Container;
 
   async connect(): Promise<any> {
+    console.log("Will wait a little to ensure that MSI will be available")
+    for (let index = 0; index < 30; index++) {
+        const ms = 1000
+        await delay (ms)
+        console.log("I have waited ", (ms*index)/1000, " seconds.", "-- AZURE_CLIENT_ID: ", env.AZURE_CLIENT_ID)
+    }
+
     const { endpoint, databaseId, containerId } = dbConfig;
     console.log("Will create a cosmosClient using the following config values: endpoint: ", endpoint, " - databaseId: ", databaseId, " - containerId: ", containerId )
     const credential = new DefaultAzureCredential();
