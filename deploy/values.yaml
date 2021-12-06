@@ -30,6 +30,12 @@ readinessProbe:
 
 containerPort: 3000
 
+envs:
+  ENVIRONMENT:
+    _default: "local"
+    uat: "test"
+    prod: "prod"
+
 resourcesLimitsCpu: .5
 resourcesLimitsMemory: 75M
 resourcesRequestsCpu: .1
