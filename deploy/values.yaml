@@ -37,6 +37,14 @@ envs:
     _default: "local"
     uat: "test"
     prod: "prod"
+  AZURE_TENANT_ID:
+    _default: "N/A"
+    uat: "805bc25d-8e64-4ed6-8d24-3883c9068c5a"
+    prod: "prod"
+  AZURE_CLIENT_ID:
+    _default: "N/A"
+    uat: "1403ac13-85de-4a48-997c-b150d39b462a"
+    prod: "prod"
 
 resourcesLimitsCpu: .5
 resourcesLimitsMemory: 75M
