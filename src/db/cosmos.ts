@@ -1,6 +1,6 @@
 import { Container, CosmosClient } from '@azure/cosmos';
 import { DataStore, Secret, SecretConfig } from '../types';
-import { ChainedTokenCredential, AzureCliCredential, VisualStudioCodeCredential, ManagedIdentityCredential } from "@azure/identity"
+import { DefaultAzureCredential } from "@azure/identity"
 // @ts-ignore
 import dbConfig from '../../dbConfig.js';
 
@@ -11,11 +11,7 @@ export class CosmosDataStore implements DataStore {
   async connect(): Promise<any> {
     const { endpoint, databaseId, containerId } = dbConfig;
     console.log("Will create a cosmosClient using the following config values: endpoint: ", endpoint, " - databaseId: ", databaseId, " - containerId: ", containerId )
-    const credential = new ChainedTokenCredential(
-        new ManagedIdentityCredential(),
-        new AzureCliCredential(),
-        new VisualStudioCodeCredential()
-    );
+    const credential = new DefaultAzureCredential();
 
     const client = new CosmosClient({
         endpoint: endpoint,
