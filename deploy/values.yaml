@@ -17,7 +17,7 @@ livenessProbe:
   path: /health
   port: 3000
 linkerd:
-  enabled: true
+  enabled: false
 owner: team-devex
 entrypoint: /usr/src/app
 prometheus:
