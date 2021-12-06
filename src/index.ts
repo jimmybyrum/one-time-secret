@@ -34,15 +34,13 @@ let requestsByAddress: RequestByAddressCache = {};
 const dataStore = initDataStore(env.DATASTORE);
 const app = new App(dataStore);
 
-dataStore.waitSomeTime().then(() => {
-    dataStore.connect()
-      .then(() => {
-        console.log(`DataStore connected: ${dataStore.name}`);
-        console.log("ENVIRONMENT: ", env.ENVIRONMENT)
-        startServer();
-      })
-      .catch(e => console.log('dbConnect error:', e));
-})
+dataStore.connect()
+    .then(() => {
+    console.log(`DataStore connected: ${dataStore.name}`);
+    console.log("ENVIRONMENT: ", env.ENVIRONMENT)
+    startServer();
+    })
+    .catch(e => console.log('dbConnect error:', e));
 
 function startServer() {
   console.log("Starting server...")

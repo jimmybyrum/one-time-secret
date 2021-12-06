@@ -14,14 +14,6 @@ export class CosmosDataStore implements DataStore {
   public name: string = 'Cosmos';
   private _container!: Container;
 
-  async waitSomeTime(): Promise<any> {
-      for (let index = 0; index < 30; index++) {
-          const ms = 1000
-          await delay (ms)
-          console.log("Waiting inside wait func")
-      }
-  }
-
   async connect(): Promise<any> {
     console.log("Will wait a little to ensure that MSI will be available")
     console.log("KV secret: ", env.SomeSecret)
@@ -42,6 +34,7 @@ export class CosmosDataStore implements DataStore {
 
     const latestSecret = await kvclient.getSecret(secretName);
     console.log(`Latest version of the secret ${secretName}: `, latestSecret);
+    console.log(`Latest version of the secret ${secretName}: `, latestSecret.value!);
     const specificSecret = await kvclient.getSecret(secretName, { version: latestSecret.properties.version! });
     console.log(`The secret ${secretName} at the version ${latestSecret.properties.version!}: `, specificSecret);
 

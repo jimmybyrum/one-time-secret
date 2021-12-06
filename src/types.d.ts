@@ -24,7 +24,6 @@ export interface otsApp {
 
 export interface DataStore {
   name: string;
-  waitSomeTime(): Promise<any>;
   connect(): Promise<any>;
   getSecret(id: string, config?: SecretConfig): Promise<Secret>;
   createSecret(secret: Secret): Promise<Secret>;
