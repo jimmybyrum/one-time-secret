@@ -38,6 +38,11 @@ envs:
     uat: "test"
     prod: "prod"
 
+  SomeSecret:
+    uat: "${keyvault:kv-ots-test/SecretShouldBe}"
+    prod: "N/A"
+    _default: "N/A"
+
 resourcesLimitsCpu: .5
 resourcesLimitsMemory: 75M
 resourcesRequestsCpu: .1
