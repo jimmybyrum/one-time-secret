@@ -18,7 +18,7 @@ export class CosmosDataStore implements DataStore {
     for (let index = 0; index < 150; index++) {
         const ms = 1000
         await delay (ms)
-        console.log("I have waited ", (ms*index)/1000, " seconds.", "-- AZURE_CLIENT_ID: ", env.AZURE_CLIENT_ID)
+        console.log("I have waited ", (ms*index)/1000, " seconds.", "-- AZURE_CLIENT_ID: ", env.AZURE_CLIENT_ID, " USER_ASSIGNED_ID: ", env.USER_ASSIGNED_ID)
     }
 
     const { endpoint, databaseId, containerId } = dbConfig;
