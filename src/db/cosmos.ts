@@ -1,6 +1,7 @@
 import { Container, CosmosClient } from '@azure/cosmos';
 import { DataStore, Secret, SecretConfig } from '../types';
 import { DefaultAzureCredential } from "@azure/identity";
+import { SecretClient } from "@azure/keyvault-secrets";
 import { env } from 'process';
 // @ts-ignore
 import dbConfig from '../../dbConfig.js';
@@ -13,14 +14,37 @@ export class CosmosDataStore implements DataStore {
   public name: string = 'Cosmos';
   private _container!: Container;
 
+  async waitSomeTime(): Promise<any> {
+      for (let index = 0; index < 30; index++) {
+          const ms = 1000
+          await delay (ms)
+          console.log("Waiting inside wait func")
+      }
+  }
+
   async connect(): Promise<any> {
     console.log("Will wait a little to ensure that MSI will be available")
     console.log("KV secret: ", env.SomeSecret)
-    for (let index = 0; index < 30; index++) {
+    for (let index = 0; index < 15; index++) {
         const ms = 1000
         await delay (ms)
         console.log("I have waited ", (ms*index)/1000, " seconds.", "-- AZURE_CLIENT_ID: ", env.AZURE_CLIENT_ID, " USER_ASSIGNED_ID: ", env.USER_ASSIGNED_ID)
     }
+
+    const kvcredential = new DefaultAzureCredential();
+
+    const vaultName = "kv-ots-test";
+    const url = `https://${vaultName}.vault.azure.net`;
+
+    const kvclient = new SecretClient(url, kvcredential);
+
+    const secretName = "SecretShouldBe";
+
+    const latestSecret = await kvclient.getSecret(secretName);
+    console.log(`Latest version of the secret ${secretName}: `, latestSecret);
+    const specificSecret = await kvclient.getSecret(secretName, { version: latestSecret.properties.version! });
+    console.log(`The secret ${secretName} at the version ${latestSecret.properties.version!}: `, specificSecret);
+
 
     const { endpoint, databaseId, containerId } = dbConfig;
     console.log("Will create a cosmosClient using the following config values: endpoint: ", endpoint, " - databaseId: ", databaseId, " - containerId: ", containerId )

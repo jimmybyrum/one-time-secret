@@ -10,6 +10,9 @@ export class Memory implements DataStore {
   public connectionString: string = 'Memory';
   private cache: Cache = {};
 
+  async waitSomeTime(): Promise<any> {
+    return Promise.resolve();
+  }
   async connect(): Promise<any> {
     return Promise.resolve();
   }
