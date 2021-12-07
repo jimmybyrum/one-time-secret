@@ -10,43 +10,33 @@ function delay(ms: number) {
     return new Promise( resolve => setTimeout(resolve, ms) );
 }
 
+async function fetchPrimaryKey(env: string){
+    const vaultName = `kv-ots-${env}`;
+    const url = `https://${vaultName}.vault.azure.net`;
+
+    const kvclient = new SecretClient(url, new DefaultAzureCredential());
+
+    const key = (await kvclient.getSecret("PrimaryKey")).value ?? "No value found";
+
+    return key
+}
+
 export class CosmosDataStore implements DataStore {
   public name: string = 'Cosmos';
   private _container!: Container;
 
   async connect(): Promise<any> {
     console.log("Will wait a little to ensure that MSI will be available")
-    console.log("KV secret: ", env.SomeSecret)
-    for (let index = 0; index < 15; index++) {
+    for (let index = 0; index < 10; index++) {
         const ms = 1000
         await delay (ms)
-        console.log("I have waited ", (ms*index)/1000, " seconds.", "-- AZURE_CLIENT_ID: ", env.AZURE_CLIENT_ID, " USER_ASSIGNED_ID: ", env.USER_ASSIGNED_ID)
+        console.log("I have waited ", (ms*index)/1000, " seconds.")
     }
 
-    const kvcredential = new DefaultAzureCredential();
-
-    const vaultName = "kv-ots-test";
-    const url = `https://${vaultName}.vault.azure.net`;
-
-    const kvclient = new SecretClient(url, kvcredential);
-
-    const secretName = "SecretShouldBe";
-
-    const latestSecret = await kvclient.getSecret(secretName);
-    console.log(`Latest version of the secret ${secretName}: `, latestSecret);
-    console.log(`Latest version of the secret ${secretName}: `, latestSecret.value!);
-    const specificSecret = await kvclient.getSecret(secretName, { version: latestSecret.properties.version! });
-    console.log(`The secret ${secretName} at the version ${latestSecret.properties.version!}: `, specificSecret);
-
+    const key = await fetchPrimaryKey(env.ENVIRONMENT ?? "NoEnvAvailable");
 
     const { endpoint, databaseId, containerId } = dbConfig;
-    console.log("Will create a cosmosClient using the following config values: endpoint: ", endpoint, " - databaseId: ", databaseId, " - containerId: ", containerId )
-    const credential = new DefaultAzureCredential({ managedIdentityClientId: "1e717f5c-afc8-40fb-8729-9f8d88df26d2" });
-
-    const client = new CosmosClient({
-        endpoint: endpoint,
-        aadCredentials: credential
-    });
+    const client = new CosmosClient({ endpoint, key });
     console.log("Created cosmosClient")
 
     const database = client.database(databaseId);
