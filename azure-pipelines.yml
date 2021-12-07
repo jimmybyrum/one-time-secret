@@ -3,9 +3,14 @@
 # You can always visit this link to download this pipeline.
 
 trigger:
-  - main
-  - master
-  - release/*
+  branches:
+    include:
+      - main
+  paths:
+    exclude:
+      - docs/*
+      - quality-assurance.md
+      - README.md
 
 pr: none
 
