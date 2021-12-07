@@ -133,7 +133,7 @@ stages:
 
   - stage: "DeployPROD"
     displayName: "Deploy deploy to Prod"
-    dependsOn: ["PushToACR", "DeployMT"]
+    dependsOn: ["PushToACR"]
     condition: and(and(succeeded(), eq(variables['Build.SourceBranch'], variables['mainBranch'])), eq(${{ parameters.deployToPROD }}, true))
     jobs:
       - deployment: Deploy
@@ -188,7 +188,7 @@ stages:
 
   - stage: "DeployApimApiPROD"
     displayName: "Deploy deploy APIM policy to PROD"
-    dependsOn: ["PushToACR", "DeployApimApiMT"]
+    dependsOn: ["PushToACR"]
     condition: and(and(succeeded(), eq(variables['Build.SourceBranch'], variables['mainBranch'])), eq(${{ parameters.deployToPROD }}, true))
     jobs:
       - deployment: Deploy
