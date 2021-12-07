@@ -20,6 +20,8 @@ owner_team=$2
 basename=ots
 name=${basename}-${env}
 rg=rg-${name}
+kv=kv-${name}
+cosmos=cosmos-${name}
 loc=westeurope # Change default location
 
 if [[ ${env} = "prod" ]]; then
@@ -41,6 +43,15 @@ END
 
 az group create -l $loc -n $rg --tags $tags
 
+# Check if kv exists, if not create
+kv_existing=$(az keyvault list --query "[?name=='$kv'].name" -o tsv)
+
+if [[ ${kv_existing} != "$kv" ]]; then
+    az keyvault create --location $loc --name $kv -g $rg --sku standard --enable-soft-delete true --tags $tags
+else
+    echo "Keyvault $kv already exists"
+fi
+
 parameters=$(cat <<-END
     {"basename": {"value": "$basename"},
      "env": {"value": "$env"},
@@ -50,5 +61,16 @@ END
 
 az deployment group create -g $rg --template-file ots.bicep --mode Incremental --parameters "$parameters" --name $name
 
-UserObjectId=$(az ad sp list --display-name $managed_identity --query [].objectId -o tsv)
-az cosmosdb sql role assignment create --account-name cosmos-ots-test --resource-group rg-ots-test --role-assignment-id cb8ed2d7-2371-4e3c-bd31-6cc1560e84f8 --role-definition-name "Cosmos DB Built-in Data Reader" --scope "/" --principal-id $UserObjectId
+# Fetch MSI object ID
+UserObjectId=$(az ad sp list --display-name $managed_identity --query [].objectId -o tsv) # Get managed identity
+
+# Set RBAC assignment for MSI
+az cosmosdb sql role assignment create --account-name ${cosmos} --resource-group ${rg} --role-definition-name "Cosmos DB Built-in Data Reader" --scope "/" --principal-id $UserObjectId
+
+# Set RBAC policy for MSI
+az keyvault set-policy --name $kv --object-id $UserObjectId --secret-permissions get
+
+# Set Cosmos Primary Key as a kv secret
+secretName="PrimaryKey"
+PrimaryKey=$(az cosmosdb keys list --name ${cosmos} --resource-group ${rg} --type keys --query primaryMasterKey -o tsv)
+az keyvault secret set --vault-name $kv --name ${secretName} --value $PrimaryKey
