@@ -24,7 +24,7 @@ ingress:
 livenessProbe:
   path: /health
   port: 3000
-  initialDelaySeconds: 180
+  initialDelaySeconds: 30
 linkerd:
   enabled: false
 owner: team-devex
@@ -36,7 +36,7 @@ replicas: 1
 readinessProbe:
   path: /ready
   port: 3000
-  initialDelaySeconds: 180
+  initialDelaySeconds: 30
 
 containerPort: 3000
 
@@ -45,11 +45,6 @@ envs:
     _default: "local"
     uat: "test"
     prod: "prod"
-
-  SomeSecret:
-    uat: "${keyvault:kv-ots-test/SecretShouldBe}"
-    prod: "N/A"
-    _default: "N/A"
 
 resourcesLimitsCpu: .5
 resourcesLimitsMemory: 75M
