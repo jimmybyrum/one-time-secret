@@ -3,7 +3,7 @@ FROM node:14-slim
 ENV PORT 3000
 ENV HOST 0.0.0.0
 ENV DATASTORE cosmos
-ENV BASE_PATH vipps-ots
+ENV BASE_PATH ots
 WORKDIR /usr/src/app
 COPY package*.json ./
 RUN npm install

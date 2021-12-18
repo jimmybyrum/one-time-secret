@@ -22,10 +22,8 @@ spec:
         name: one-time-secret
         imagePullPolicy: Never
         env:
-          - name: DATASTORE
-            value: cosmos
           - name: BASE_PATH
-            value: vipps-ots
+            value: ots
         resources: {}
         ports:
           - containerPort: 3000

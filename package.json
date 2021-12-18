@@ -4,7 +4,7 @@
   "description": "one time secret",
   "main": "dist/index",
   "scripts": {
-    "start": "tsc && BASE_PATH=vipps-ots node dist/index",
+    "start": "tsc && BASE_PATH=ots node dist/index",
     "test": "tsc && jest --detectOpenHandles ./src",
     "build": "docker build . -t one-time-secret",
     "run": "docker run -dp 3000:3000 one-time-secret",
@@ -19,11 +19,6 @@
   },
   "author": "Jimmy Byrum <me@jimmybyrum.com>",
   "license": "MIT",
-  "dependencies": {
-    "@azure/cosmos": "^3.14.1",
-    "@azure/identity": "^2.0.1",
-    "@azure/keyvault-secrets": "^4.3.0"
-  },
   "devDependencies": {
     "@babel/preset-typescript": "^7.16.0",
     "@types/jest": "^27.0.3",
