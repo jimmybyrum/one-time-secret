@@ -1,9 +1,17 @@
 # One Time Secret
 
-VOTS allows you to share secrets securely with other team members or external parties. Once a secret has been viewed, it's gone, forever. No more sending secrets over Slack, email or shouting them out loud. For added security use the password feature and send the password and link separately to your recipient.
+Vanilla nodejs implementation of a one-time-secret service.
+
+Allows you to share secrets securely. Secrets can only be viewed once. No more sending secrets over Slack, email or speaking them out loud.
 
 ## Local setup
 ```bash
 npm install
 npm run start
+```
+
+## Docker
+```bash
+npm run build # build docker image
+npm run run # run docker container via docker-compose
 ```

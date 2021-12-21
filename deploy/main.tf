@@ -34,7 +34,7 @@ resource "google_app_engine_application" "app" {
 
 resource "google_artifact_registry_repository" "main" {
   provider      = google-beta
-  location      = "europe-west3"
+  location      = var.region_docker
   repository_id = "one-time-secret"
   description   = "Docker repo for OTS"
   format        = "DOCKER"
@@ -42,22 +42,28 @@ resource "google_artifact_registry_repository" "main" {
 
 resource "google_cloud_run_service" "webapp" {
   name     = "ots-cloud-run"
-  location = var.region
+  location = var.region_cloud_run
 
   template {
     spec {
       containers {
-        image = "europe-west3-docker.pkg.dev/key-beacon-334717/one-time-secret/ots:latest"
+        image = "${var.region_docker}-docker.pkg.dev/key-beacon-334717/one-time-secret/ots:latest"
+        resources {
+          limits = {
+            cpu    = 1
+            memory = "128Mi"
+          }
+        }
         env {
-          name = "DATASTORE"
+          name  = "DATASTORE"
           value = var.DATASTORE
         }
         env {
-          name = "GCP_FIRESTORE_PROJECT_ID"
+          name  = "GCP_FIRESTORE_PROJECT_ID"
           value = var.GCP_FIRESTORE_PROJECT_ID
         }
         env {
-          name = "GCP_FIRESTORE_COLLECTION"
+          name  = "GCP_FIRESTORE_COLLECTION"
           value = var.GCP_FIRESTORE_COLLECTION
         }
       }
@@ -65,6 +71,20 @@ resource "google_cloud_run_service" "webapp" {
   }
   autogenerate_revision_name = true
 }
+
+resource "google_cloud_run_domain_mapping" "default" {
+  location = var.region_cloud_run
+  name     = "ots.jimmybyrum.com"
+
+  metadata {
+    namespace = "one-time-secret"
+  }
+
+  spec {
+    route_name = google_cloud_run_service.webapp.name
+  }
+}
+
 
 data "google_iam_policy" "noauth" {
   binding {
@@ -83,5 +103,5 @@ resource "google_cloud_run_service_iam_policy" "noauth" {
 }
 
 output "url" {
-  value = "${google_cloud_run_service.webapp.status[0].url}"
+  value = google_cloud_run_service.webapp.status[0].url
 }
