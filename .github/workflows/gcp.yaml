@@ -8,6 +8,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: gcp
     env:
+      REPO_NAME: one-time-secret
       IMAGE_NAME: ots
       REPO_URL: europe-west3-docker.pkg.dev
       PROJECT_ID: key-beacon-334717
@@ -35,7 +36,7 @@ jobs:
     - name: Push Docker Image to Artifact Registry
       env:
         GIT_TAG: ${{ steps.increment-git-tag.outputs.git-tag }}
-        DOCKER_REPO: "${{ env.REPO_URL }}/${{ env.PROJECT_ID }}/${{ env.IMAGE_NAME }}"
+        DOCKER_REPO: "${{ env.REPO_URL }}/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/${{ env.IMAGE_NAME }}"
       run: |-
         docker tag $IMAGE_NAME:latest $DOCKER_REPO:latest
         docker tag $IMAGE_NAME:latest $DOCKER_REPO:$GIT_TAG
