@@ -9,7 +9,7 @@ jobs:
     environment: gcp
     env:
       IMAGE_NAME: ots
-      DOCKER_REPO: "europe-west3-docker.pkg.dev/key-beacon-334717/one-time-secret/${{ IMAGE_NAME }}"
+      DOCKER_REPO: europe-west3-docker.pkg.dev/key-beacon-334717/one-time-secret/ots
       CLOUD_RUN_SERVICE: ots-cloud-run
     steps:
     - name: Checkout
