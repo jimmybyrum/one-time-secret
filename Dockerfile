@@ -7,7 +7,6 @@ WORKDIR /usr/src/app
 COPY package*.json ./
 RUN npm install
 COPY . .
-COPY config ./
 RUN node_modules/typescript/bin/tsc
 
 EXPOSE 3000
