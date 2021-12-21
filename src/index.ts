@@ -3,7 +3,8 @@ import { readFile } from 'fs/promises';
 import { App } from './app';
 import { Errors, RequestByAddressCache, Secret } from './types';
 import { env } from 'process';
-import initDataStore from './db/index'
+import DataStorage from './db/index';
+import { Firestore } from './db/firestore';
 
 const HOST = env.HOST || 'localhost';
 const PORT = parseInt(env?.PORT || '3000', 10);
@@ -31,19 +32,19 @@ enum HTTP {
 
 let requestsByAddress: RequestByAddressCache = {};
 
-const dataStore = initDataStore(env.DATASTORE);
+DataStorage.addStorage(Firestore);
+
+const dataStore = DataStorage.init(env.DATASTORE);
 const app = new App(dataStore);
 
 dataStore.connect()
     .then(() => {
-    console.log(`DataStore connected: ${dataStore.name}`);
-    console.log("ENVIRONMENT: ", env.ENVIRONMENT)
-    startServer();
+      console.log(`Connected: ${dataStore.name}:${dataStore.connectionString}`);
+      startServer();
     })
     .catch(e => console.log('dbConnect error:', e));
 
 function startServer() {
-  console.log("Starting server...")
   createServer((req, res) => {
     const pathname = req.url!.split('?')[0];
     let urlParts = pathname!.substring(1).split('/');
