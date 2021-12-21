@@ -7,6 +7,10 @@ jobs:
     name: Build and Push to GAR
     runs-on: ubuntu-latest
     environment: gcp
+    env:
+      IMAGE_NAME: ots
+      REPO_URL: europe-west3-docker.pkg.dev
+      PROJECT_ID: key-beacon-334717
     steps:
     - name: Checkout
       uses: actions/checkout@v2
@@ -16,7 +20,7 @@ jobs:
         credentials_json: ${{ secrets.SERVICE_ACCOUNT_KEY }}
 
     - name: Build Docker Image
-      run: docker build -t ${{ secrets.IMAGE_NAME }}:latest .
+      run: docker build -t $IMAGE_NAME:latest .
 
     - name: Tag Release
       id: increment-git-tag
@@ -31,9 +35,9 @@ jobs:
     - name: Push Docker Image to Artifact Registry
       env:
         GIT_TAG: ${{ steps.increment-git-tag.outputs.git-tag }}
-        DOCKER_REPO: "${{ secrets.REPO_URL }}/${{ secrets.PROJECT_ID }}/${{ secrets.IMAGE_NAME }}"
+        DOCKER_REPO: "$REPO_URL/$PROJECT_ID/$IMAGE_NAME"
       run: |-
-        docker tag ${{ secrets.IMAGE_NAME }}:latest ${{ env.DOCKER_REPO }}:latest
-        docker tag ${{ secrets.IMAGE_NAME }}:latest ${{ env.DOCKER_REPO }}:${{ env.GIT_TAG }}
-        docker push ${{ env.DOCKER_REPO }}:latest
-        docker push ${{ env.DOCKER_REPO }}:${{ env.GIT_TAG }}
+        docker tag $IMAGE_NAME:latest $DOCKER_REPO:latest
+        docker tag $IMAGE_NAME:latest $DOCKER_REPO:$GIT_TAG
+        docker push $DOCKER_REPO:latest
+        docker push $DOCKER_REPO:$GIT_TAG
