@@ -1,11 +1,11 @@
 import { App } from './app';
-import initDataStore from './db/index'
+import DataStorage from './db/index';
 import { env } from 'process';
 
 const SECRET_VALUE = 'secret-value';
 const SECRET_PASSWORD = 'secret-password';
 
-const dataStore = initDataStore(env.DATASTORE);
+const dataStore = DataStorage.init(env.DATASTORE);
 const app = new App(dataStore);
 
 describe('tests', () => {

@@ -11,7 +11,7 @@ export class Memory implements DataStore {
   private cache: Cache = {};
 
   async connect(): Promise<any> {
-    return Promise.resolve();
+    return true;
   }
 
   async createSecret(secret: Secret): Promise<Secret> {
@@ -24,7 +24,7 @@ export class Memory implements DataStore {
       secret.expires = now;
     }
     this.cache[id] = secret;
-    return Promise.resolve(secret);
+    return secret;
   }
 
   async getSecret(id: string, config?: SecretConfig): Promise<Secret> {
@@ -35,9 +35,9 @@ export class Memory implements DataStore {
       const s: Secret = {
         value: undefined
       };
-      return Promise.resolve(s);
+      return s;
     }
-    return Promise.resolve(secret);
+    return secret;
   }
 
   async removeSecret(id: string): Promise<void> {

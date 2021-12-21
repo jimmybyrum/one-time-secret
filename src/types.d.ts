@@ -23,7 +23,8 @@ export interface otsApp {
 }
 
 export interface DataStore {
-  name: string;
+  readonly name: string;
+  connectionString: string;
   connect(): Promise<any>;
   getSecret(id: string, config?: SecretConfig): Promise<Secret>;
   createSecret(secret: Secret): Promise<Secret>;
