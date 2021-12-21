@@ -1,0 +1,42 @@
+name: Build and Push Image
+on:
+  push:
+    branches: [ main, firestore ]
+jobs:
+  build-push-gar:
+    name: Build and Push to GAR
+    runs-on: ubuntu-latest
+    environment: gcp
+    env:
+      IMAGE_NAME: one-time-secret
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - uses: google-github-actions/setup-gcloud@master
+      with:
+        service_account_key: ${{ secrets.SERVICE_ACCOUNT_KEY }}
+        project_id: ${{ env.PROJECT_ID }}
+        export_default_credentials: true
+
+    - name: Build Docker Image
+      run: docker build -t $IMAGE_NAME:latest .
+
+    - name: Tag Release
+      id: increment-git-tag
+      run: |
+        bash ./scripts/git_update.sh -v major
+
+    - name: Configure Docker Client
+      run: |-
+        gcloud auth configure-docker --quiet
+        gcloud auth configure-docker us-west2-docker.pkg.dev --quiet
+
+    - name: Push Docker Image to Artifact Registry
+      env:
+        GIT_TAG: ${{ steps.increment-git-tag.outputs.git-tag }}
+      run: |-
+        docker tag $IMAGE_NAME:latest $REPO_URL/$PROJECT_ID/$IMAGE_NAME:latest
+        docker tag $IMAGE_NAME:latest $REPO_URL/$PROJECT_ID/$IMAGE_NAME:$GIT_TAG
+        docker push $REPO_URL/$PROJECT_ID/$IMAGE_NAME:latest
+        docker push $REPO_URL/$PROJECT_ID/$IMAGE_NAME:$GIT_TAG
