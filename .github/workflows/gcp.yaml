@@ -1,7 +1,7 @@
 name: Build and Push Image
 on:
   push:
-    branches: [ main, firestore ]
+    branches: [ main ]
 
 jobs:
   build-push-gar:
