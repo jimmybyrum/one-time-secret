@@ -50,7 +50,7 @@ jobs:
         image: "${{ env.DOCKER_REPO }}:latest"
         region: europe-north1
         env_vars: 'DATASTORE="firestore",GCP_FIRESTORE_PROJECT_ID="key-beacon-334717",GCP_FIRESTORE_COLLECTION="secrets"'
-        metadata:
+        resources:
           limits:
             cpu: 1
             memory: "128Mi"
