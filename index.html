@@ -186,7 +186,7 @@ label {
   <fieldset>
     <legend>Create new secret 🤫</legend>
     <textarea name="secret" rows="5" maxlength="1000" required="required"></textarea>
-    <label id="expires-in" title="max: 7 days">Expires in
+    <label id="expires-in" title="max: 7 days">Expires in:
       <input name="time" type="number" min="1" max="60" step="1" value="1" />
       <select name="scale">
         <option value="days" data-singular="day" data-plural="days">day</option>
@@ -194,7 +194,7 @@ label {
         <option value="minutes" data-singular="minute" data-plural="minutes">minute</option>
       </select> ⏱💥
     </label>
-    <label>Password
+    <label>Password:
       <input name="password" type="password" maxlength="50" placeholder="This is optional, but not a bad idea at all." /> 🔑
     </label>
     <input type="submit" value="Submit" />
