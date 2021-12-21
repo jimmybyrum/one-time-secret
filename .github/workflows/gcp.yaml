@@ -2,6 +2,7 @@ name: Build and Push Image
 on:
   push:
     branches: [ main, firestore ]
+
 jobs:
   build-push-gar:
     name: Build and Push to GAR
@@ -10,7 +11,6 @@ jobs:
     env:
       IMAGE_NAME: ots
       DOCKER_REPO: europe-west3-docker.pkg.dev/key-beacon-334717/one-time-secret/ots
-      CLOUD_RUN_SERVICE: ots-cloud-run
     steps:
     - name: Checkout
       uses: actions/checkout@v2
@@ -46,8 +46,14 @@ jobs:
       id: deploy
       uses: 'google-github-actions/deploy-cloudrun@v0'
       with:
-        service: "${{ env.CLOUD_RUN_SERVICE }}"
+        service: ots-cloud-run
         image: "${{ env.DOCKER_REPO }}:latest"
+        region: europe-north1
+        env_vars: 'DATASTORE="firestore",GCP_FIRESTORE_PROJECT_ID="key-beacon-334717",GCP_FIRESTORE_COLLECTION="secrets"'
+        metadata:
+          limits:
+            cpu: 1
+            memory: "128Mi"
 
     - name: 'Use output'
       run: 'curl "${{ steps.deploy.outputs.url }}"'
