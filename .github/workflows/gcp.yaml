@@ -31,10 +31,8 @@ jobs:
     - name: Push Docker Image to Artifact Registry
       env:
         GIT_TAG: ${{ steps.increment-git-tag.outputs.git-tag }}
-        DOCKER_REPO: ${{ secrets.REPO_URL }}/${{ secrets.PROJECT_ID }}/${{ secrets.IMAGE_NAME }}
+        DOCKER_REPO: "${{ secrets.REPO_URL }}/${{ secrets.PROJECT_ID }}/${{ secrets.IMAGE_NAME }}"
       run: |-
-        echo "DOCKER_REPO is ${{ env.DOCKER_REPO }}"
-        echo "GIT_TAG is ${{ env.GIT_TAG }}"
         docker tag ${{ secrets.IMAGE_NAME }}:latest ${{ env.DOCKER_REPO }}:latest
         docker tag ${{ secrets.IMAGE_NAME }}:latest ${{ env.DOCKER_REPO }}:${{ env.GIT_TAG }}
         docker push ${{ env.DOCKER_REPO }}:latest
