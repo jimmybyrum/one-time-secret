@@ -25,7 +25,7 @@ jobs:
     - name: Tag Release
       id: increment-git-tag
       run: |
-        bash ./scripts/git_update.sh -v major
+        bash ./scripts/git_update.sh -v minor
 
     - name: Configure Docker Client
       run: |-
@@ -36,7 +36,7 @@ jobs:
       env:
         GIT_TAG: ${{ steps.increment-git-tag.outputs.git-tag }}
       run: |-
-        docker tag $IMAGE_NAME:latest $REPO_URL/$PROJECT_ID/$IMAGE_NAME:latest
-        docker tag $IMAGE_NAME:latest $REPO_URL/$PROJECT_ID/$IMAGE_NAME:$GIT_TAG
-        docker push $REPO_URL/$PROJECT_ID/$IMAGE_NAME:latest
-        docker push $REPO_URL/$PROJECT_ID/$IMAGE_NAME:$GIT_TAG
+        docker tag $IMAGE_NAME:latest ${{ env.REPO_URL }}/${{ env.PROJECT_ID }}/$IMAGE_NAME:latest
+        docker tag $IMAGE_NAME:latest ${{ env.REPO_URL }}/${{ env.PROJECT_ID }}/$IMAGE_NAME:$GIT_TAG
+        docker push ${{ env.REPO_URL }}/${{ env.PROJECT_ID }}/$IMAGE_NAME:latest
+        docker push ${{ env.REPO_URL }}/${{ env.PROJECT_ID }}/$IMAGE_NAME:$GIT_TAG
