@@ -53,7 +53,7 @@ jobs:
         #   limits:
         #     cpu: 1
         #     memory: "128Mi"
-        env_vars: 'DATASTORE="firestore",GCP_FIRESTORE_PROJECT_ID="key-beacon-334717",GCP_FIRESTORE_COLLECTION="secrets"'
+        env_vars: 'DATASTORE=firestore,GCP_FIRESTORE_PROJECT_ID=key-beacon-334717,GCP_FIRESTORE_COLLECTION=secrets'
 
     - name: 'Use output'
       run: 'curl "${{ steps.deploy.outputs.url }}"'
