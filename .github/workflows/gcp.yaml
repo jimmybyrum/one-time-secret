@@ -8,10 +8,8 @@ jobs:
     runs-on: ubuntu-latest
     environment: gcp
     env:
-      REPO_NAME: one-time-secret
       IMAGE_NAME: ots
-      REPO_URL: europe-west3-docker.pkg.dev
-      PROJECT_ID: key-beacon-334717
+      DOCKER_REPO: "europe-west3-docker.pkg.dev/key-beacon-334717/one-time-secret/${{ env.IMAGE_NAME }}"
       CLOUD_RUN_SERVICE: ots-cloud-run
     steps:
     - name: Checkout
@@ -38,7 +36,6 @@ jobs:
       id: push
       env:
         GIT_TAG: ${{ steps.increment-git-tag.outputs.git-tag }}
-        DOCKER_REPO: "${{ env.REPO_URL }}/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/${{ env.IMAGE_NAME }}"
       run: |-
         docker tag $IMAGE_NAME:latest $DOCKER_REPO:latest
         docker tag $IMAGE_NAME:latest $DOCKER_REPO:$GIT_TAG
@@ -50,7 +47,7 @@ jobs:
       uses: 'google-github-actions/deploy-cloudrun@v0'
       with:
         service: "${{ env.CLOUD_RUN_SERVICE }}"
-        image: "${{ steps.push.env.DOCKER_REPO }}:latest"
+        image: "${{ env.DOCKER_REPO }}:latest"
 
     - name: 'Use output'
       run: 'curl "${{ steps.deploy.outputs.url }}"'
