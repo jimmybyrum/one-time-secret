@@ -1,7 +1,5 @@
 name: Build and Push Image
-on:
-  push:
-    branches: [ main ]
+on: workflow_dispatch
 
 jobs:
   build-push-gar:
