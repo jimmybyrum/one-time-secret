@@ -33,16 +33,16 @@
   "author": "Jimmy Byrum <me@jimmybyrum.com>",
   "license": "MIT",
   "devDependencies": {
-    "@babel/preset-typescript": "^7.16.0",
     "@types/jest": "^27.0.3",
-    "@types/node": "^16.11.9",
     "jest": "^27.3.1",
     "nodemon": "^2.0.15",
     "ts-jest": "^27.0.7",
-    "ts-node": "^10.4.0",
-    "typescript": "^4.5.2"
+    "ts-node": "^10.4.0"
   },
   "dependencies": {
-    "@google-cloud/firestore": "^5.0.1"
+    "@babel/preset-typescript": "^7.16.0",
+    "@google-cloud/firestore": "^5.0.1",
+    "@types/node": "^16.11.9",
+    "typescript": "^4.5.2"
   }
 }
