@@ -98,6 +98,7 @@ function handleShow(req: IncomingMessage, res: ServerResponse, secretId: string)
         value: secret.value
       }), 'utf-8');
     }).catch(e => {
+      console.log(e);
       switch (e) {
         case Errors.PASSWORD_REQUIRED:
           res.writeHead(HTTP.UNAUTHORIZED, CONTENT_TYPE_JSON);
@@ -126,6 +127,7 @@ function handleCreate(req: IncomingMessage, res: ServerResponse) {
       res.writeHead(HTTP.OK, CONTENT_TYPE_JSON);
       res.end(JSON.stringify({ id: id }), 'utf-8');
     }).catch(e => {
+      console.log(e);
       return badData(res);
     });
   });
@@ -135,7 +137,10 @@ function handleHtml(req: IncomingMessage, res: ServerResponse) {
   readFile('index.html').then(content => {
     res.writeHead(HTTP.OK, CONTENT_TYPE_HTML);
     res.end(content, 'utf-8');
-  }).catch(() => internalError(res));
+  }).catch(e => {
+    console.log(e);
+    internalError(res)
+  });
 }
 
 function badData(res: ServerResponse) {

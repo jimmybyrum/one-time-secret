@@ -4,7 +4,6 @@ import { createHash } from 'crypto';
 import { env } from 'process';
 
 const PROJECT_ID = env.GCP_FIRESTORE_PROJECT_ID;
-const CREDENTIALS = `config/${PROJECT_ID}.json`;
 const COLLECTION = env.GCP_FIRESTORE_COLLECTION!;
 
 export class Firestore implements DataStore {
@@ -17,12 +16,14 @@ export class Firestore implements DataStore {
   };
 
   async connect(): Promise<any> {
+    this.connectionString = PROJECT_ID!;
     const firestoreConfig = {
       projectId: PROJECT_ID,
-      keyFilename: CREDENTIALS,
+      credentials: {
+        client_email: env.GCP_CLIENT_EMAIL,
+        private_key: env.GCP_PRIVATE_KEY
+      }
     };
-    // console.log(firestoreConfig);
-    this.connectionString = firestoreConfig.projectId!;
     const db = new GCPFireStore(firestoreConfig);
     this.db = db;
     return db;
