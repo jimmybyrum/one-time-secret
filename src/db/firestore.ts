@@ -1,12 +1,13 @@
 import { DocumentData, Firestore as GCPFireStore } from '@google-cloud/firestore';
-import { DataStore, Secret, SecretConfig } from '../types';
+import { Secret, SecretConfig } from '../types';
 import { createHash } from 'crypto';
 import { env } from 'process';
+import DataStoreCoreImpl from './core';
 
 const PROJECT_ID = env.GCP_FIRESTORE_PROJECT_ID;
 const COLLECTION = env.GCP_FIRESTORE_COLLECTION!;
 
-export class Firestore implements DataStore {
+export class Firestore extends DataStoreCoreImpl {
   public readonly name: string = 'Firestore';
   public connectionString: string = 'Firestore';
   private db!: GCPFireStore;
@@ -44,19 +45,6 @@ export class Firestore implements DataStore {
     } catch (e) {
       throw e;
     }
-  }
-
-  private getUtcDate() {
-    const now = new Date();
-    return new Date(
-      now.getUTCFullYear(),
-      now.getUTCMonth(),
-      now.getUTCDate(),
-      now.getUTCHours(),
-      now.getUTCMinutes(),
-      now.getUTCSeconds(),
-      now.getUTCMilliseconds(),
-    );
   }
 
   async getSecret(id: string, config?: SecretConfig): Promise<Secret> {

@@ -1,11 +1,12 @@
-import { DataStore, Secret, SecretConfig } from '../types';
+import { Secret, SecretConfig } from '../types';
 import { createHash } from 'crypto';
+import DataStoreCoreImpl from './core';
 
 type Cache = {
   [key: string]: any;
 }
 
-export class Memory implements DataStore {
+export class Memory extends DataStoreCoreImpl {
   public name: string = 'Memory';
   public connectionString: string = 'Memory';
   private cache: Cache = {};
