@@ -22,7 +22,11 @@ export interface otsApp {
   removeSecret(id: string): Promise<any>;
 }
 
-export interface DataStore {
+export interface DataStoreCore {
+  getUtcDate(date?: Date): Date;
+}
+
+export interface DataStore extends DataStoreCore {
   readonly name: string;
   connectionString: string;
   connect(): Promise<any>;

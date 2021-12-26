@@ -104,7 +104,8 @@ label {
 }
 #show-secret,
 #share-secret,
-#show-secret-expired {
+#show-secret-expired,
+#local-secrets {
   display: none;
 }
 #share-secret,
@@ -139,6 +140,21 @@ label {
 #revealed-secret-container,
 #revealed-secret:empty {
   display: none;
+}
+#local-secrets {
+  margin-top: 3rem;
+}
+#my-secrets {
+  list-style: none;
+  padding: 0;
+}
+#my-secrets li {
+  margin: 0 0 1rem;
+}
+#my-secrets li cite {
+  display: block;
+  font-size: small;
+  color: var(--accent-color-active);
 }
 #sp {
   display: none;
@@ -206,6 +222,11 @@ label {
   <span class="copy-text" data-copy-target="#share-secret-link" data-copied-text="Copied 📝">Copy link 📋</span>
 </div>
 
+<div id="local-secrets">
+  <h4>Secrets shared from this browser</h4>
+  <ul id="my-secrets"></ul>
+</div>
+
 <script>
 (function() {
   const baseUrl = `${location.origin}${location.pathname}`.replace(/\/$/, '');
@@ -234,6 +255,11 @@ label {
       onCopyLink(e, copyLink);
     });
   });
+
+  const localSecrets = document.getElementById('local-secrets');
+  const mySecrets = document.getElementById('my-secrets');
+  const localList = getLocalList();
+  showLocalSecrets();
 
   const PASSWORD_REQUIRED = 'password-required';
 
@@ -275,10 +301,76 @@ label {
       }
       return response.json()
     }).then(json => {
-      secretLink.innerHTML = `${baseUrl}?s=${json.id}`;
+      secretLink.innerHTML = getSecretUrl(json.id);
       shareSecret.style.display = 'block';
       ots.secret.value = '';
+      saveLocal(json.id);
     }).catch(e => console.log(e));
+  }
+
+  function getSecretUrl(id) {
+    return `${baseUrl}?s=${id}`;
+  }
+
+  function showLocalSecrets() {
+    // console.log(localList);
+    mySecrets.innerHTML = '';
+    localList.forEach(item => {
+      const itemId = `my-secret-${item.id}`;
+      const li = document.createElement('li');
+      const secretLink = document.createElement('span');
+      secretLink.id = itemId;
+      secretLink.innerText = getSecretUrl(item.id);
+      const secretTimestamp = document.createElement('cite');
+      secretTimestamp.innerText = new Date(item.date);
+      const copyButton = document.createElement('span');
+      copyButton.classList.add('copy-text');
+      copyButton.setAttribute('data-copy-target', `#${itemId}`);
+      copyButton.setAttribute('data-copied-text', 'Copied');
+      copyButton.innerText = 'Copy';
+      copyButton.addEventListener('click', e => onCopyLink(e, copyButton));
+      li.appendChild(secretLink);
+      li.appendChild(copyButton);
+      li.appendChild(secretTimestamp);
+      mySecrets.appendChild(li);
+    });
+    localSecrets.style.display = (localList.length > 0) ? 'block' : 'none';
+  }
+
+  function getLocalList() {
+    let list;
+    try {
+      list = JSON.parse(localStorage.getItem('secrets'));
+    } catch (e) {}
+    return list || [];
+  }
+
+  function saveList() {
+    if (localStorage) {
+      localStorage.setItem('secrets', JSON.stringify(localList));
+    }
+    showLocalSecrets();
+  }
+
+  function saveLocal(id) {
+    localList.push({
+      id: id,
+      date: new Date()
+    });
+    saveList();
+  }
+
+  function removeLocal(id) {
+    let index = -1;
+    localList.forEach((item, idx) => {
+      if (item.id === id) {
+        index = idx;
+      }
+    });
+    if (index > -1) {
+      localList.splice(index, 1);
+    }
+    saveList();
   }
 
   function onCopyLink(e, copyLink) {
@@ -317,6 +409,7 @@ label {
         revealedSecretContainer.style.display = 'block';
         revealedSecret.innerText = json.value;
         showSecret.style.display = 'block';
+        removeLocal(id);
       } else if (json.err !== PASSWORD_REQUIRED) {
         showSecretExpired.innerText = '😶 🤐 🤷';
         showSecretExpired.style.display = 'block';
@@ -324,6 +417,7 @@ label {
         setTimeout(() => {
           showSecretExpired.style.display = 'none';
         }, 3000);
+        removeLocal(id);
       }
     }).catch(e => console.log(e));
   }
