@@ -46,6 +46,15 @@ dataStore.connect()
     })
     .catch(e => console.log('dbConnect error:', e));
 
+process.on('SIGINT', async () => {
+  try {
+    await dataStore.disconnect();
+  } catch (e) {
+    console.log(e);
+  }
+  process.exit();
+});
+
 function startServer() {
   createServer((req, res) => {
     const pathname = req.url!.split('?')[0];

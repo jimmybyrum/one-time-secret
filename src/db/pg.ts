@@ -75,7 +75,7 @@ export class Postgres extends DataStoreCoreImpl {
     }
   }
 
-  async disconnect() {
-    this.db.end();
+  async disconnect(): Promise<any> {
+    return this.db.end();
   }
 }

@@ -26,6 +26,10 @@ export class Firestore extends DataStoreCoreImpl {
     this.db = db;
     return db;
   }
+
+  async disconnect(): Promise<any> {
+    return true;
+  }
   
   async createSecret(secret: Secret): Promise<Secret> {
     const doc = this.db.collection(COLLECTION).doc(secret.id!);

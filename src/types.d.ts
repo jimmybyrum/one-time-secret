@@ -35,6 +35,7 @@ export interface DataStore extends DataStoreCore {
   readonly name: string;
   connectionString: string;
   connect(): Promise<any>;
+  disconnect(): Promise<any>;
   getSecret(id: string, config?: SecretConfig): Promise<Secret>;
   createSecret(secret: Secret): Promise<Secret>;
   removeSecret(id: string): Promise<any>;

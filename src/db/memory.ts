@@ -14,6 +14,10 @@ export class Memory extends DataStoreCoreImpl {
     return true;
   }
 
+  async disconnect(): Promise<any> {
+    return true;
+  }
+
   async createSecret(secret: Secret): Promise<Secret> {
     this.cache[secret.id!] = secret;
     return secret;
@@ -33,5 +37,4 @@ export class Memory extends DataStoreCoreImpl {
     delete this.cache[id];
     return Promise.resolve();
   }
-
 }
