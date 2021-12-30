@@ -1,10 +1,8 @@
-import { createCipheriv, createDecipheriv, createHash, randomBytes, scryptSync } from 'crypto';
 import { DataStore, Errors, otsApp, Secret, SecretConfig } from './types'
 
 export class App implements otsApp {
   private VALID_SCALE = ['day', 'hour', 'minute', 'second', 'days', 'hours', 'minutes', 'seconds'];
   private MAX_TTL = 60 * 60 * 24 * 7 // 7 days
-  private ALGO = 'aes-192-cbc';
   private _dataStore: DataStore;
 
   constructor(datastore: DataStore) {
@@ -20,10 +18,7 @@ export class App implements otsApp {
       if (secret.password !== json.password) {
         return Promise.reject(Errors.PASSWORD_REQUIRED);
       }
-      const [encrypted, iv] = secret.value.split('|');
-      const key = scryptSync(secret.password, 'salt', 24);
-      const decipher = createDecipheriv(this.ALGO, key, Buffer.from(iv, 'hex'));
-      secret.value = decipher.update(encrypted, 'hex', 'utf8') + decipher.final('utf8');
+      secret.value = this._dataStore.decryptValue(secret.value, secret.password);
     }
     if (secret?.id) {
       await this._dataStore.removeSecret(id);
@@ -38,26 +33,19 @@ export class App implements otsApp {
     if (typeof json.scale !== 'string' || this.VALID_SCALE.indexOf(json.scale) < 0) {
       return Promise.reject(Errors.BAD_DATA);
     }
-    const salt = new Date().valueOf();
-    const id = createHash('md5').update(json.value + salt).digest('hex');
     const ttl = this.timeScaleToSeconds(json.time, json.scale);
     if (ttl > this.MAX_TTL) {
       return Promise.reject(Errors.BAD_DATA);
     }
     let secret: Secret = {
-      id: id,
+      id: this._dataStore.getSecretId(json.value),
       value: json.value,
-      ttl: ttl
+      ttl: ttl,
+      expires: this._dataStore.getExpires(ttl)
     };
     if (json.password) {
       secret.password = json.password;
-      const iv = randomBytes(16);
-      const key = scryptSync(secret.password, 'salt', 24);
-      const cipher = createCipheriv(this.ALGO, key, iv);
-      secret.value = [
-        cipher.update(secret.value, 'utf8', 'hex') + cipher.final('hex'),
-        Buffer.from(iv).toString('hex')
-      ].join('|');
+      secret.value = this._dataStore.encryptValue(json.value, json.password);
     }
     try {
       const createdSecret = await this._dataStore.createSecret(secret);

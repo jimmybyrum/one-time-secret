@@ -5,6 +5,7 @@ import { Errors, RequestByAddressCache, Secret } from './types';
 import { env } from 'process';
 import DataStorage from './db/index';
 import { Firestore } from './db/firestore';
+import { Postgres } from './db/pg';
 
 const HOST = env.HOST || 'localhost';
 const PORT = parseInt(env?.PORT || '3000', 10);
@@ -33,6 +34,7 @@ enum HTTP {
 let requestsByAddress: RequestByAddressCache = {};
 
 DataStorage.addStorage(Firestore);
+DataStorage.addStorage(Postgres);
 
 const dataStore = DataStorage.init(env.DATASTORE);
 const app = new App(dataStore);

@@ -23,7 +23,12 @@ export interface otsApp {
 }
 
 export interface DataStoreCore {
-  getUtcDate(date?: Date): Date;
+  static emptySecret: Secret;
+  static getUtcDate(date?: Date): Date;
+  static getSecretId(value: string): string;
+  static getExpires(ttl: number): Date;
+  static encryptValue(value: string, password?: string): string;
+  static decryptValue(id: string, password?: string): string;
 }
 
 export interface DataStore extends DataStoreCore {

@@ -1,5 +1,4 @@
 import { Secret, SecretConfig } from '../types';
-import { createHash } from 'crypto';
 import DataStoreCoreImpl from './core';
 
 type Cache = {
@@ -16,27 +15,16 @@ export class Memory extends DataStoreCoreImpl {
   }
 
   async createSecret(secret: Secret): Promise<Secret> {
-    const now = new Date();
-    const salt = now.valueOf();
-    const id = createHash('md5').update(secret.value + salt).digest('hex');
-    secret.id = id;
-    if (secret.ttl) {
-      now.setSeconds(now.getSeconds() + secret.ttl);
-      secret.expires = now;
-    }
-    this.cache[id] = secret;
+    this.cache[secret.id!] = secret;
     return secret;
   }
 
   async getSecret(id: string, config?: SecretConfig): Promise<Secret> {
     const secret = this.cache[id] || {};
-    const expired = secret.expires && new Date() > secret.expires;
+    const expired = secret.expires && this.getUtcDate() > secret.expires;
     if (!secret.value || expired) {
       await this.removeSecret(id);
-      const s: Secret = {
-        value: undefined
-      };
-      return s;
+      return this.emptySecret;
     }
     return secret;
   }

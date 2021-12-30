@@ -1,28 +1,25 @@
 import { DocumentData, Firestore as GCPFireStore } from '@google-cloud/firestore';
 import { Secret, SecretConfig } from '../types';
-import { createHash } from 'crypto';
 import { env } from 'process';
 import DataStoreCoreImpl from './core';
 
 const PROJECT_ID = env.GCP_FIRESTORE_PROJECT_ID;
 const COLLECTION = env.GCP_FIRESTORE_COLLECTION!;
+const GCP_CLIENT_EMAIL = env.GCP_CLIENT_EMAIL;
+const GCP_PRIVATE_KEY = env.GCP_PRIVATE_KEY;
 
 export class Firestore extends DataStoreCoreImpl {
   public readonly name: string = 'Firestore';
   public connectionString: string = 'Firestore';
   private db!: GCPFireStore;
 
-  private emptySecret: Secret = {
-    value: undefined
-  };
-
   async connect(): Promise<any> {
     this.connectionString = PROJECT_ID!;
     const firestoreConfig = {
       projectId: PROJECT_ID,
       credentials: {
-        client_email: env.GCP_CLIENT_EMAIL,
-        private_key: env.GCP_PRIVATE_KEY
+        client_email: GCP_CLIENT_EMAIL,
+        private_key: GCP_PRIVATE_KEY
       }
     };
     const db = new GCPFireStore(firestoreConfig);
@@ -31,16 +28,9 @@ export class Firestore extends DataStoreCoreImpl {
   }
   
   async createSecret(secret: Secret): Promise<Secret> {
-    const now = this.getUtcDate();
-    const salt = now.valueOf();
-    const id = createHash('md5').update(secret.value + salt).digest('hex');
-    const doc = this.db.collection(COLLECTION).doc(id);
-    if (secret.ttl) {
-      now.setSeconds(now.getSeconds() + secret.ttl);
-      secret.expires = now;
-    }
+    const doc = this.db.collection(COLLECTION).doc(secret.id!);
     try {
-      const created = await doc.set(secret)
+      await doc.set(secret)
       return secret;
     } catch (e) {
       throw e;

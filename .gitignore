@@ -12,6 +12,8 @@ dbConfig.js
 
 config/
 
+certs/
+
 .terraform/
 *.tfstate*
 *.tfvars
